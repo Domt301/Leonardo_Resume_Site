@@ -39,6 +39,10 @@ export default function SignPost({
     }
   });
 
+  // Board width scales with the label so long words stay legible.
+  const boardWidth = Math.max(2.2, label.length * 0.19 + 0.5);
+  const postX = boardWidth / 2 - 0.35;
+
   return (
     <group
       position={position}
@@ -50,21 +54,21 @@ export default function SignPost({
       onPointerOut={() => (document.body.style.cursor = '')}
     >
       {/* posts */}
-      <mesh position={[-0.85, 0.55, 0]} castShadow>
+      <mesh position={[-postX, 0.55, 0]} castShadow>
         <boxGeometry args={[0.14, 1.1, 0.14]} />
         <meshStandardMaterial color={RAMP.wood[2]} map={woodTexture()} />
       </mesh>
-      <mesh position={[0.85, 0.55, 0]} castShadow>
+      <mesh position={[postX, 0.55, 0]} castShadow>
         <boxGeometry args={[0.14, 1.1, 0.14]} />
         <meshStandardMaterial color={RAMP.wood[2]} map={woodTexture()} />
       </mesh>
       {/* board */}
       <mesh ref={board} position={[0, 1.05, 0]} castShadow>
-        <boxGeometry args={[2.2, 0.75, 0.1]} />
+        <boxGeometry args={[boardWidth, 0.75, 0.1]} />
         <meshStandardMaterial
           color={RAMP.bone[3]}
           map={labelTexture(`sign-${section}`, [label.toUpperCase()], {
-            width: 256,
+            width: Math.round(boardWidth * 128),
             height: 96,
           })}
           emissive={RAMP.gold[3]}

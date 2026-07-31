@@ -48,6 +48,8 @@ export interface WorldZone {
 export interface Plateau {
   rect: Rect;
   y: number;
+  /** Top surface material (default grass). */
+  top?: 'grass' | 'stone';
 }
 
 /** Linear ramp (stairs) along `axis` from `from` (at rect min) to `to` (at rect max). */

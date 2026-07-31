@@ -43,13 +43,14 @@ export default function Island() {
         <meshStandardMaterial color={RAMP.grass[2]} map={grass} />
       </mesh>
 
-      {/* Plateau slabs + grass tops */}
+      {/* Plateau slabs + tops (grass, or stone for the identity plaza) */}
       {PLATEAUS.map((p, i) => {
         const w = p.rect.max[0] - p.rect.min[0];
         const d = p.rect.max[1] - p.rect.min[1];
         const cx = (p.rect.min[0] + p.rect.max[0]) / 2;
         const cz = (p.rect.min[1] + p.rect.max[1]) / 2;
         const h = p.y + 0.4;
+        const stoneTop = p.top === 'stone';
         return (
           <group key={i}>
             <mesh position={[cx, p.y - h / 2, cz]} castShadow receiveShadow>
@@ -58,7 +59,11 @@ export default function Island() {
             </mesh>
             <mesh position={[cx, p.y + 0.001, cz]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
               <planeGeometry args={[w, d]} />
-              <meshStandardMaterial color={RAMP.grass[2]} map={grass} />
+              {stoneTop ? (
+                <meshStandardMaterial color={RAMP.stone[3]} map={stoneTexture()} />
+              ) : (
+                <meshStandardMaterial color={RAMP.grass[2]} map={grass} />
+              )}
             </mesh>
           </group>
         );

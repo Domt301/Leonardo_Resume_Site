@@ -28,9 +28,9 @@ function dampAngle(current: number, target: number, lambda: number, dt: number):
 }
 
 /**
- * Kinematic player (spec §15): procedural primitive adventurer — original
- * silhouette (rounded hood, satchel, teal tunic with gold trim), not a clone
- * of any existing character. Per-frame state lives in refs/playerRuntime.
+ * Kinematic player (spec §15): procedural primitive likeness of Leonardo —
+ * black polo, glasses, goatee, short brown hair. Per-frame state lives in
+ * refs/playerRuntime. Local +Z is the face; spawn rotation 0 faces the camera.
  */
 export default function Player() {
   const group = useRef<THREE.Group>(null);
@@ -126,39 +126,69 @@ export default function Player() {
   return (
     <group ref={group} position={[spawn[0], playerRuntime.y, spawn[2]]}>
       <group ref={bodyGroup}>
-        {/* tunic */}
-        <mesh position={[0, 0.55, 0]} castShadow>
-          <cylinderGeometry args={[0.28, 0.36, 0.7, 8]} />
-          <meshStandardMaterial color={RAMP.teal[1]} flatShading />
+        {/* black polo torso */}
+        <mesh position={[0, 0.58, 0]} castShadow>
+          <cylinderGeometry args={[0.27, 0.34, 0.66, 8]} />
+          <meshStandardMaterial color={RAMP.cloth[1]} flatShading />
         </mesh>
-        {/* belt with gold trim */}
-        <mesh position={[0, 0.32, 0]}>
-          <cylinderGeometry args={[0.34, 0.36, 0.08, 8]} />
-          <meshStandardMaterial color={RAMP.gold[1]} flatShading />
+        {/* polo collar */}
+        <mesh position={[0, 0.92, 0]}>
+          <cylinderGeometry args={[0.2, 0.29, 0.1, 8]} />
+          <meshStandardMaterial color={RAMP.cloth[0]} flatShading />
+        </mesh>
+        {/* placket buttons */}
+        <mesh position={[0, 0.78, 0.27]}>
+          <boxGeometry args={[0.05, 0.2, 0.03]} />
+          <meshStandardMaterial color={RAMP.cloth[3]} flatShading />
         </mesh>
         {/* head */}
-        <mesh position={[0, 1.12, 0]} castShadow>
+        <mesh position={[0, 1.14, 0]} castShadow>
           <sphereGeometry args={[0.26, 10, 8]} />
           <meshStandardMaterial color={RAMP.skin[3]} flatShading />
         </mesh>
-        {/* rounded hood */}
-        <mesh position={[0, 1.24, -0.04]}>
-          <sphereGeometry args={[0.28, 10, 8, 0, Math.PI * 2, 0, Math.PI * 0.62]} />
-          <meshStandardMaterial color={RAMP.teal[2]} flatShading />
+        {/* short brown hair cap */}
+        <mesh position={[0, 1.24, -0.03]}>
+          <sphereGeometry args={[0.265, 10, 8, 0, Math.PI * 2, 0, Math.PI * 0.45]} />
+          <meshStandardMaterial color={RAMP.hair[2]} flatShading />
         </mesh>
-        {/* satchel */}
-        <mesh position={[0.3, 0.5, 0.12]} rotation={[0, 0, -0.25]}>
-          <boxGeometry args={[0.14, 0.22, 0.3]} />
-          <meshStandardMaterial color={RAMP.wood[2]} flatShading />
+        {/* glasses: framed light lenses + bridge on the face (+Z) */}
+        {[-0.1, 0.1].map((x) => (
+          <group key={x}>
+            <mesh position={[x, 1.17, 0.24]}>
+              <boxGeometry args={[0.13, 0.11, 0.035]} />
+              <meshStandardMaterial color={RAMP.cloth[0]} flatShading />
+            </mesh>
+            <mesh position={[x, 1.17, 0.255]}>
+              <boxGeometry args={[0.09, 0.07, 0.02]} />
+              <meshStandardMaterial color={RAMP.stone[4]} flatShading />
+            </mesh>
+          </group>
+        ))}
+        <mesh position={[0, 1.17, 0.25]}>
+          <boxGeometry args={[0.09, 0.03, 0.03]} />
+          <meshStandardMaterial color={RAMP.cloth[0]} flatShading />
         </mesh>
-        {/* arms */}
+        {/* goatee */}
+        <mesh position={[0, 1, 0.2]}>
+          <boxGeometry args={[0.13, 0.11, 0.08]} />
+          <meshStandardMaterial color={RAMP.hair[1]} flatShading />
+        </mesh>
+        {/* arms: skin with short polo-sleeve caps (nested so they swing together) */}
         <mesh ref={leftArm} position={[-0.36, 0.82, 0]} castShadow>
           <boxGeometry args={[0.13, 0.5, 0.13]} />
-          <meshStandardMaterial color={RAMP.teal[2]} flatShading />
+          <meshStandardMaterial color={RAMP.skin[3]} flatShading />
+          <mesh position={[0, 0.17, 0]}>
+            <boxGeometry args={[0.16, 0.18, 0.16]} />
+            <meshStandardMaterial color={RAMP.cloth[1]} flatShading />
+          </mesh>
         </mesh>
         <mesh ref={rightArm} position={[0.36, 0.82, 0]} castShadow>
           <boxGeometry args={[0.13, 0.5, 0.13]} />
-          <meshStandardMaterial color={RAMP.teal[2]} flatShading />
+          <meshStandardMaterial color={RAMP.skin[3]} flatShading />
+          <mesh position={[0, 0.17, 0]}>
+            <boxGeometry args={[0.16, 0.18, 0.16]} />
+            <meshStandardMaterial color={RAMP.cloth[1]} flatShading />
+          </mesh>
         </mesh>
       </group>
       {/* legs (outside the bob group so feet stay planted) */}

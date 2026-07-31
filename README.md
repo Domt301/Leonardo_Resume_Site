@@ -1,10 +1,12 @@
 # Leonardo Wildt — Interactive Resume World
 
 A playable resume: one stylized low-poly **floating island** rendered with
-**React Three Fiber**. Walk a character between themed landmarks — Experience
-Ridge, Skills Grove, Projects Workshop, About Overlook, Certifications Shrine,
-Contact Dock — and open resume sections through in-world interactions. Built
-from `spec.md`.
+**React Three Fiber**. A pixel likeness of Leonardo (black polo, glasses,
+goatee) starts on the grand stairway beneath a gold-framed identity monument —
+name, title, and tagline in full view — facing the camera, ready to walk
+between themed landmarks: Experience Ridge, Skills Grove, Projects Workshop,
+About Overlook, Certifications Shrine, Contact Dock. Each opens its resume
+section through an in-world interaction. Built from `spec.md`.
 
 Everything is generated procedurally in code — **no 3D model files, no image
 assets** beyond the resume PDF and an optional pixel font.
