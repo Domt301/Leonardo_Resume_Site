@@ -3,14 +3,14 @@ import type { Profile } from './types';
 export const profile: Profile = {
   name: 'Leonardo Wildt',
   title: 'Cloud Application Architect',
-  location: 'Marietta, GA',
+  location: 'Atlanta, GA',
   email: 'leonardod.trimarchi@gmail.com',
   phone: '770.310.5875',
   languages: 'English, Spanish (fluent — bilingual)',
   links: [
     { label: 'ATLANTA, GA', href: '#' },
-    { label: 'LINKEDIN', href: 'https://www.linkedin.com/in/leonardo-wildt/' },
-    { label: 'GITHUB', href: 'https://github.com/domt301' },
+    { label: 'LINKEDIN', href: 'https://www.linkedin.com/in/leonardotrimarchi' },
+    { label: 'GITHUB', href: 'https://github.com/Domt301' },
     { label: 'EMAIL', href: 'mailto:leonardod.trimarchi@gmail.com' },
   ],
   summary: [
