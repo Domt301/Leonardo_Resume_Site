@@ -8,7 +8,7 @@ of Sigils and an Academy branch off the home island. Built from the
 
 Everything is generated procedurally in code — **no 3D model files, no image
 assets** beyond the résumé PDF and an optional pixel font. Audio is synthesised in
-WebAudio at runtime.
+WebAudio at runtime. minor
 
 ## The résumé always survives the game
 
