@@ -1,9 +1,10 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// Static SPA. Base is relative so the build works on any static host / subpath.
+// Static SPA with path-based routes (/experience, /projects/:id) — base must
+// be absolute so asset URLs resolve from nested routes.
 export default defineConfig({
-  base: './',
+  base: '/',
   plugins: [react()],
   build: {
     target: 'es2020',
