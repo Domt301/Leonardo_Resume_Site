@@ -1,5 +1,7 @@
 # Leonardo Wildt — Interactive Resume World
 
+![alt text](image.png)
+
 A playable resume: one stylized low-poly **floating island** rendered with
 **React Three Fiber**. A pixel likeness of Leonardo (black polo, glasses,
 goatee) starts on the grand stairway beneath a gold-framed identity monument —
