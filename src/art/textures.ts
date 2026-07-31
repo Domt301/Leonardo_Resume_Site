@@ -51,30 +51,36 @@ export const grassTexture = () =>
   });
 
 export const dirtTexture = () =>
-  make('dirt', 16, (x, s) => {
+  make('dirt', 24, (x, s) => {
     for (let i = 0; i < s; i++)
       for (let j = 0; j < s; j++) {
         const n = h(i * 2, j);
-        const band = 0.9 + Math.sin(j * 0.9) * 0.05; // faint horizontal grain
-        const v = Math.min(1, band * (n < 0.15 ? 0.78 : n < 0.3 ? 0.9 : 1.0));
-        x.fillStyle = grey(v);
+        const band = 0.92 + Math.sin(j * 0.8) * 0.04; // faint horizontal strata
+        let v = band * (n < 0.12 ? 0.8 : n < 0.26 ? 0.9 : 1.0);
+        // scattered darker clods
+        if (h(Math.floor(i / 3), Math.floor(j / 3)) > 0.86) v *= 0.82;
+        x.fillStyle = grey(Math.min(1, v));
         x.fillRect(i, j, 1, 1);
       }
   });
 
 export const stoneTexture = () =>
-  make('stone', 24, (x, s) => {
-    // brick / block pattern: light blocks, darker mortar, offset rows
-    const bh = 6;
-    const bw = 12;
+  make('stone', 32, (x, s) => {
+    // defined block masonry: mortar channels, per-brick tint, top bevel highlight
+    const bh = 8;
+    const bw = 16;
     for (let j = 0; j < s; j++)
       for (let i = 0; i < s; i++) {
         const row = Math.floor(j / bh);
         const off = (row % 2) * (bw / 2);
-        const inMortar = j % bh === 0 || (i + off) % bw === 0;
-        const n = h(i, j);
-        const v = inMortar ? 0.68 : 0.92 + n * 0.08;
-        x.fillStyle = grey(v);
+        const inRow = j % bh;
+        const inCol = (i + off) % bw;
+        const mortar = inRow === 0 || inCol === 0;
+        const bevel = inRow === 1 || inCol === 1; // lit top-left edge of each block
+        const brick = 0.86 + h(row, Math.floor((i + off) / bw)) * 0.14;
+        let v = mortar ? 0.62 : bevel ? Math.min(1, brick + 0.1) : brick;
+        v *= 0.98 + h(i, j) * 0.02;
+        x.fillStyle = grey(Math.min(1, v));
         x.fillRect(i, j, 1, 1);
       }
   });

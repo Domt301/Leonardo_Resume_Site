@@ -93,7 +93,7 @@ export class Renderer {
     this.gl = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
     this.gl.setPixelRatio(1);
     this.gl.shadowMap.enabled = true;
-    this.gl.shadowMap.type = THREE.BasicShadowMap; // hard shadows pixelate with everything
+    this.gl.shadowMap.type = THREE.PCFSoftShadowMap; // softer contact shadows (painterly)
     this.gl.setClearColor(new THREE.Color(VOID), 1);
     this.gl.outputColorSpace = THREE.SRGBColorSpace;
 
