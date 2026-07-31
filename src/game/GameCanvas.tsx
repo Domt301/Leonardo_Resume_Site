@@ -26,7 +26,7 @@ export default function GameCanvas() {
         fov: 35,
         near: 0.1,
         far: 100,
-        position: [spawn[0], spawn[1] + 7, spawn[2] + 9],
+        position: [spawn[0], spawn[1] + 8, spawn[2] + 10.5],
       }}
       gl={{ antialias: false, powerPreference: 'high-performance' }}
       onCreated={(state) => {

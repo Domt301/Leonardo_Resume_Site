@@ -28,9 +28,9 @@ export default function World() {
       <Water />
       <Island />
 
-      {/* Identity board on the terrace */}
+      {/* Identity monument on the plaza */}
       <IdentityBoard
-        position={[POSITIONS.identityBoard[0], 0.9, POSITIONS.identityBoard[1]]}
+        position={[POSITIONS.identityBoard[0], 1.1, POSITIONS.identityBoard[1]]}
       />
 
       {/* Landmarks */}

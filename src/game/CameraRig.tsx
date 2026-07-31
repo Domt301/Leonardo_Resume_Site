@@ -5,7 +5,7 @@ import { playerRuntime } from './playerRuntime';
 import { useSettingsStore } from '../state/useSettingsStore';
 
 // Follow camera (spec §16.1): fixed yaw, exponential damping, no motion sickness.
-const CAMERA_OFFSET = new THREE.Vector3(0, 7, 9);
+const CAMERA_OFFSET = new THREE.Vector3(0, 8, 10.5);
 const LOOK_AT_OFFSET = new THREE.Vector3(0, 0.8, 0);
 const CAMERA_DAMPING = 4;
 const LOOK_DAMPING = 6;

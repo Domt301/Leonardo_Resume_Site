@@ -12,7 +12,8 @@ import type { Plateau, Ramp, Rect, Vec2, Vec3, WorldZone, CollisionShape } from 
 export const ISLAND = { minX: -15, maxX: 15, minZ: -12, maxZ: 12 };
 export const WATER_Y = -0.6;
 export const PLAYER_RADIUS = 0.45;
-export const SPAWN: Vec3 = [0, 0, 0.5];
+/** First-visit spawn: on the grand stairway, walking down toward the camera. */
+export const SPAWN: Vec3 = [0, 0.6, -5.2];
 
 // ── Heights ──────────────────────────────────────────────────────────────────
 
@@ -21,8 +22,8 @@ export const PLATEAUS: Plateau[] = [
   { rect: { min: [-13.5, -11], max: [-4.5, -5] }, y: 1.2 },
   // Projects knoll (NE)
   { rect: { min: [4.5, -11], max: [13.5, -5] }, y: 1.0 },
-  // Identity-board terrace (N center)
-  { rect: { min: [-3, -11], max: [3, -6.5] }, y: 0.9 },
+  // Identity plaza (N center) — regal stone terrace under the name board
+  { rect: { min: [-4.5, -11], max: [4.5, -6.2] }, y: 1.1, top: 'stone' },
 ];
 
 export const RAMPS: Ramp[] = [
@@ -30,8 +31,8 @@ export const RAMPS: Ramp[] = [
   { rect: { min: [-6.6, -5.1], max: [-4.4, -3] }, axis: 'z', from: 1.2, to: 0 },
   // Projects stairs
   { rect: { min: [5.4, -5.1], max: [7.6, -3] }, axis: 'z', from: 1.0, to: 0 },
-  // Terrace steps down to the central path
-  { rect: { min: [-1.1, -6.6], max: [1.1, -4.4] }, axis: 'z', from: 0.9, to: 0 },
+  // Grand stairway from the plaza down to the central path
+  { rect: { min: [-1.7, -6.3], max: [1.7, -4.2] }, axis: 'z', from: 1.1, to: 0 },
 ];
 
 // ── Walkable union ───────────────────────────────────────────────────────────
@@ -43,8 +44,8 @@ export const WALKABLE: Rect[] = [
   { min: [-13, -10.5], max: [-5, -5] },
   // Projects plateau top
   { min: [5, -10.5], max: [13, -5] },
-  // Identity terrace
-  { min: [-2.5, -10.4], max: [2.5, -6.4] },
+  // Identity plaza
+  { min: [-4, -10.5], max: [4, -6.2] },
   // Stair rects (connect plateaus to lowland)
   ...RAMPS.map((r) => r.rect),
   // Stone bridge strip off the south edge (dead-ends at the rail)
@@ -114,7 +115,7 @@ const penMidZ = (pen.min[1] + pen.max[1]) / 2;
 export const BLOCKERS: CollisionShape[] = [
   { type: 'box', center: POSITIONS.house, halfExtents: [2.3, 1.9] },
   { type: 'circle', center: POSITIONS.caveArch, radius: 2.2 },
-  { type: 'box', center: POSITIONS.identityBoard, halfExtents: [3.3, 0.6] },
+  { type: 'box', center: POSITIONS.identityBoard, halfExtents: [4.4, 0.7] },
   { type: 'circle', center: POSITIONS.pond, radius: POSITIONS.pondRadius + 0.2 },
   { type: 'circle', center: POSITIONS.shrine, radius: 0.9 },
   // Fence pen — west, north, south walls; east wall split by a gate.
