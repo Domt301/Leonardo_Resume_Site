@@ -63,6 +63,12 @@ npm run preview    # serve the production build
 Deploy `dist/` to any static host. The build uses relative asset paths, so it
 works from any subpath.
 
+**Vercel** (configured): `vercel.json` sets framework `vite`, build
+`npm run build`, output `dist/`, and long-cache headers on hashed assets. Import
+the repo in Vercel (or `vercel` / `vercel --prod` from the CLI) — no extra
+settings needed. Deep links use hash routes (`/#/aws`), so no SPA rewrites are
+required.
+
 ### Deep links (spec §15)
 
 `#/aws`, `#/travelers`, `#/cox`, `#/rentready`, `#/ncourt`, `#/atlantic`,
