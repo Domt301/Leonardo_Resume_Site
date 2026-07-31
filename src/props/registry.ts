@@ -20,12 +20,12 @@ const p = (geo: THREE.BufferGeometry, color: string, cast = true, receive = fals
 
 // ── Foliage ──────────────────────────────────────────────────────────────────
 const tree: StaticBuilder = (s) => {
-  const parts: Part[] = [p(cylinder(0.1, 0.13, 0.9, 6), RAMP.wood[2])];
-  const heights = [0.95, 1.25, 1.55];
-  heights.forEach((y, i) => {
-    const r = 0.55 - i * 0.12;
-    parts.push(p(place(blob(r, s + i * 7, 0, 0.22), (hash(s, i) - 0.5) * 0.2, y, 0, hash(i, s) * 6.28), RAMP.leaf[3]));
-  });
+  // fuller layered canopy: shadowed lower mass → mid → lit cap (rounder read)
+  const parts: Part[] = [p(cylinder(0.11, 0.14, 0.85, 6), RAMP.wood[2])];
+  parts.push(p(place(blob(0.62, s, 0, 0.2), 0, 0.95, 0, hash(s, 1) * 6.28), RAMP.leaf[2]));
+  parts.push(p(place(blob(0.52, s + 3, 0, 0.2), 0.06, 1.24, 0.04, hash(s, 2) * 6.28), RAMP.leaf[3]));
+  parts.push(p(place(blob(0.4, s + 6, 0, 0.2), -0.05, 1.52, -0.03, hash(s, 3) * 6.28), RAMP.leaf[3]));
+  parts.push(p(place(blob(0.24, s + 9, 0, 0.18), 0.05, 1.76, 0.05), RAMP.leaf[4]));
   return parts;
 };
 

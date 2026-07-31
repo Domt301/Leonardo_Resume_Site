@@ -11,7 +11,7 @@ const SNAP_MS = 250;
 
 export class IsoCamera {
   readonly camera: THREE.OrthographicCamera;
-  private halfHeight = 9;
+  private halfHeight = 8;
   private aspect = 1;
   private elevation = THREE.MathUtils.degToRad(30);
 
