@@ -153,14 +153,14 @@ export class Engine {
    * distinct. Twilight (Rural Metro) intentionally stays dim + foggy.
    */
   private applyThemeLighting(theme: string | undefined): void {
-    // sunny base
-    this.sun.color.set('#fff1d0');
-    this.sun.intensity = 2.6;
-    this.hemi.color.set('#bcdcff');
-    this.hemi.groundColor.set('#6b7a52');
-    this.hemi.intensity = 0.9;
+    // warm golden-hour base
+    this.sun.color.set('#ffe6ac');
+    this.sun.intensity = 2.75;
+    this.hemi.color.set('#f0e2c2');
+    this.hemi.groundColor.set('#7e7a4c');
+    this.hemi.intensity = 0.95;
     this.scene.fog = null;
-    this.scene.background = new THREE.Color('#243a55');
+    this.scene.background = new THREE.Color('#2c4a54');
     switch (theme) {
       case 'twilight':
         // a warm, readable dusk — dimmer and pinker than day, not black.

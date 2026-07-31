@@ -39,18 +39,14 @@ const grey = (v: number) => {
 };
 
 export const grassTexture = () =>
-  make('grass', 16, (x, s) => {
+  make('grass', 20, (x, s) => {
+    // gentle turf: mostly bright with a few soft darker tufts, low contrast
     for (let i = 0; i < s; i++)
       for (let j = 0; j < s; j++) {
         const n = h(i, j);
-        // mostly bright with a few darker blades
-        const v = n < 0.12 ? 0.74 : n < 0.22 ? 0.86 : 0.98 + h(i + 9, j) * 0.02;
+        const v = n < 0.1 ? 0.9 : n < 0.2 ? 0.95 : 0.99 + h(i + 9, j) * 0.01;
         x.fillStyle = grey(v);
         x.fillRect(i, j, 1, 1);
-        if (n > 0.9) {
-          x.fillStyle = grey(0.8);
-          x.fillRect(i, Math.max(0, j - 1), 1, 2); // a short blade streak
-        }
       }
   });
 
