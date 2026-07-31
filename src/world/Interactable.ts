@@ -9,6 +9,8 @@ export type InteractionAction =
   | { type: 'summary' }
   | { type: 'skills' }
   | { type: 'contact' }
+  | { type: 'openmap' }
+  | { type: 'travel'; to: string }
   | { type: 'enter'; interior: string; islandName: string }
   | { type: 'bridge'; to: string }
   | { type: 'npc'; npc: string; jobId?: string; section?: 'sigils' | 'academy' }

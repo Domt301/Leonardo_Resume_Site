@@ -1,7 +1,8 @@
 import * as THREE from 'three';
-import { toon } from '../art/toon';
+import { toon, toonTextured } from '../art/toon';
 import { RAMP } from '../art/palette';
 import { hash } from '../art/geometry';
+import { grassTexture, dirtTexture, stoneTexture } from '../art/textures';
 import type { IslandTheme } from '../data/types';
 
 // Terrain mesh construction (spec §6.2). Walk the grid once, emit merged buffers
@@ -29,10 +30,37 @@ class MeshBuf {
   tri(a: V3, b: V3, c: V3): void {
     this.pos.push(...a, ...b, ...c);
   }
-  build(): THREE.BufferGeometry | null {
+  build(proj: 'top' | 'wall' | 'none' = 'none', jitter = false): THREE.BufferGeometry | null {
     if (this.pos.length === 0) return null;
     const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(this.pos), 3));
+    const pos = new Float32Array(this.pos);
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const n = pos.length / 3;
+    const TS = 0.5; // texture tiles per world unit-ish
+    if (proj !== 'none') {
+      const uv = new Float32Array(n * 2);
+      for (let i = 0; i < n; i++) {
+        const px = pos[i * 3];
+        const py = pos[i * 3 + 1];
+        const pz = pos[i * 3 + 2];
+        if (proj === 'top') {
+          uv[i * 2] = px * TS;
+          uv[i * 2 + 1] = pz * TS;
+        } else {
+          uv[i * 2] = (px + pz) * TS;
+          uv[i * 2 + 1] = py * TS;
+        }
+      }
+      g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+    }
+    if (jitter) {
+      const col = new Float32Array(n * 3);
+      for (let i = 0; i < n; i++) {
+        const v = 1 - hash(Math.round(pos[i * 3] * 2), Math.round(pos[i * 3 + 2] * 2), Math.round(pos[i * 3 + 1] * 2)) * 0.13;
+        col[i * 3] = col[i * 3 + 1] = col[i * 3 + 2] = v;
+      }
+      g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    }
     g.computeVertexNormals();
     return g;
   }
@@ -141,8 +169,7 @@ export function buildTerrain(grid: number[][], theme: IslandTheme): TerrainResul
 
   const group = new THREE.Group();
   const geoms: THREE.BufferGeometry[] = [];
-  const addMesh = (buf: MeshBuf, mat: THREE.Material) => {
-    const g = buf.build();
+  const addMesh = (g: THREE.BufferGeometry | null, mat: THREE.Material) => {
     if (!g) return;
     geoms.push(g);
     const m = new THREE.Mesh(g, mat);
@@ -153,11 +180,16 @@ export function buildTerrain(grid: number[][], theme: IslandTheme): TerrainResul
 
   const topR = topRampFor(theme);
   const lipR = lipRampFor(theme);
-  addMesh(topBuf, toon(topR[3]));
-  addMesh(lipBuf, toon(lipR[2]));
-  addMesh(dirtBuf, toon(RAMP.dirt[2]));
-  addMesh(stoneBuf, toon(RAMP.stone[1]));
-  addMesh(underBuf, toon(RAMP.dirt[0]));
+  const stoneTop = theme === 'vault' || theme === 'industrial';
+  // grass/stone tops textured + vertex-colour jitter; cliff dirt & stone-brick textured
+  addMesh(
+    topBuf.build('top', true),
+    stoneTop ? toonTextured(topR[3], stoneTexture(), 'stone') : toonTextured(topR[3], grassTexture(), 'grass'),
+  );
+  addMesh(lipBuf.build('top'), toon(lipR[2]));
+  addMesh(dirtBuf.build('wall', true), toonTextured(RAMP.dirt[2], dirtTexture(), 'dirt'));
+  addMesh(stoneBuf.build('wall', true), toonTextured(RAMP.stone[1], stoneTexture(), 'stone'));
+  addMesh(underBuf.build(), toon(RAMP.dirt[0]));
 
   return { group, dispose: () => geoms.forEach((g) => g.dispose()) };
 }

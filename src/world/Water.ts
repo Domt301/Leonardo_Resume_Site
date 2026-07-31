@@ -99,18 +99,34 @@ export function buildFoamRing(cols: number, rows: number): THREE.Mesh {
   return mesh;
 }
 
-/** A vertical waterfall plane in local coords at a given edge line. */
+/** A layered waterfall in local coords at a given edge line. */
 export function buildWaterfall(x: number, z: number, width: number, topY: number): THREE.Group {
   const g = new THREE.Group();
-  const h = topY + Math.abs(SEA_Y) + 1.2;
-  const fall = new THREE.Mesh(new THREE.PlaneGeometry(width, h), toon(RAMP.water[3]));
-  fall.position.set(x, topY - h / 2, z);
-  g.add(fall);
-  const capTop = new THREE.Mesh(new THREE.BoxGeometry(width, 0.12, 0.2), emissive(RAMP.bone[4]));
-  capTop.position.set(x, topY, z);
-  const capBot = new THREE.Mesh(new THREE.BoxGeometry(width, 0.14, 0.3), emissive(RAMP.bone[4]));
-  capBot.position.set(x, SEA_Y, z);
-  g.add(capTop, capBot);
+  const total = topY + Math.abs(SEA_Y) + 1.4;
+  // two stacked drops with a mid pool lip
+  const midY = topY - total * 0.45;
+  const drop = (w: number, yTop: number, yBot: number, tone: string) => {
+    const h = yTop - yBot;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), toon(tone));
+    m.position.set(x, (yTop + yBot) / 2, z);
+    g.add(m);
+    // bright foam streaks
+    const foam = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.5, h), emissive(RAMP.water[4]));
+    foam.position.set(x, (yTop + yBot) / 2, z + 0.01);
+    g.add(foam);
+  };
+  drop(width, topY, midY, RAMP.water[3]);
+  drop(width * 1.3, midY, SEA_Y - 0.2, RAMP.water[2]);
+  // foam caps at each lip
+  for (const [yy, ww] of [
+    [topY, width],
+    [midY, width * 1.15],
+    [SEA_Y, width * 1.5],
+  ] as const) {
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(ww, 0.14, 0.28), emissive(RAMP.bone[4]));
+    cap.position.set(x, yy, z);
+    g.add(cap);
+  }
   return g;
 }
 

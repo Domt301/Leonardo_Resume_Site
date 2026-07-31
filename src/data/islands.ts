@@ -309,32 +309,84 @@ function scatterProps(cfg: IslandConfig, grid: number[][]): PropPlacement[] {
   return props;
 }
 
+// ── Home island — hand-authored to match the reference composition (§9.3) ─────
+// Cells are on a 30×30 grid: upper plateau north (title board + rock arch +
+// house), a central path with stone stairs, and a lower lawn ringed with the
+// reference-styled navigation boards, a fenced chicken pen, and dense flowers.
+const HOME_PROPS: PropPlacement[] = [
+  { kind: 'titleBoard', cell: [15, 6] },
+  { kind: 'rockArch', cell: [9, 6] },
+  { kind: 'house', cell: [21, 7] },
+  { kind: 'lantern', cell: [12, 8] },
+  { kind: 'lantern', cell: [18, 8] },
+  // navigation boards (label:icon) with an action tag
+  { kind: 'board:EXPERIENCE:experience', cell: [8, 13], tag: 'map' },
+  { kind: 'board:CERTIFICATIONS:certifications', cell: [22, 13], tag: 'travel:sigils' },
+  { kind: 'board:SKILLS:skills', cell: [8, 19], tag: 'skills' },
+  { kind: 'board:EDUCATION:education', cell: [22, 19], tag: 'travel:academy' },
+  { kind: 'board:ABOUT:about', cell: [11, 23], tag: 'summary' },
+  { kind: 'board:CONTACT:contact', cell: [19, 23], tag: 'contact' },
+  { kind: 'mailbox', cell: [17, 23] },
+  { kind: 'armory', cell: [6, 17] },
+  // fenced chicken pen (SW)
+  { kind: 'fence', cell: [5, 22] },
+  { kind: 'fence', cell: [7, 22] },
+  { kind: 'chicken', cell: [6, 21] },
+  { kind: 'chicken', cell: [7, 20] },
+  // a few trees / bushes
+  { kind: 'tree', cell: [4, 10] },
+  { kind: 'tree', cell: [25, 12] },
+  { kind: 'pine', cell: [26, 8] },
+  { kind: 'bush', cell: [13, 20] },
+  { kind: 'bush', cell: [16, 18] },
+];
+
+function homeProps(grid: number[][]): PropPlacement[] {
+  const props: PropPlacement[] = HOME_PROPS.filter((p) => grid[p.cell[1]]?.[p.cell[0]] > 0);
+  // dense flower + tuft scatter on the lawn
+  const size = grid.length;
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (grid[r][c] !== 1) continue;
+      const h = hash2(c * 17 + 1, r * 23 + 5);
+      if (h < 0.16) props.push({ kind: 'flower', cell: [c, r], rot: hash2(c, r) * 6.28 });
+      else if (h < 0.19) props.push({ kind: 'bush', cell: [c, r], scale: 0.7 });
+    }
+  }
+  return props;
+}
+
 function buildSpec(cfg: IslandConfig, neighbors: Record<string, BridgeSpec[]>): IslandSpec {
   const grid = makeGrid(cfg.size, cfg.tiers);
   const [cx, cz] = centerFor(cfg);
   const origin: [number, number] = [cx - cfg.size / 2, cz - cfg.size / 2];
 
   const stairs = makeStairs(grid);
-  const props: PropPlacement[] = scatterProps(cfg, grid);
+  const isHome = cfg.id === 'home';
 
-  // Hero props on the top tier, fanned around the building spot.
+  let props: PropPlacement[];
+  if (isHome) {
+    props = homeProps(grid);
+  } else {
+    props = scatterProps(cfg, grid);
+    // Hero props on the top tier, fanned around the building spot.
+    const top = topCenterCell(grid);
+    const heroKinds = cfg.hero ?? [];
+    heroKinds.forEach((kind, i) => {
+      const off = i - (heroKinds.length - 1) / 2;
+      const cell: [number, number] = [
+        Math.max(1, Math.min(cfg.size - 2, top[0] + Math.round(off * 2))),
+        Math.max(1, Math.min(cfg.size - 2, top[1] + (i % 2 === 0 ? -1 : 1))),
+      ];
+      if (grid[cell[1]][cell[0]] > 0) props.push({ kind, cell, tag: 'hero' });
+    });
+  }
+
   const top = topCenterCell(grid);
-  const heroKinds = cfg.hero ?? [];
-  heroKinds.forEach((kind, i) => {
-    const off = i - (heroKinds.length - 1) / 2;
-    const cell: [number, number] = [
-      Math.max(1, Math.min(cfg.size - 2, top[0] + Math.round(off * 2))),
-      Math.max(1, Math.min(cfg.size - 2, top[1] + (i % 2 === 0 ? -1 : 1))),
-    ];
-    if (grid[cell[1]][cell[0]] > 0) props.push({ kind, cell, tag: 'hero' });
-  });
-
   const south = southCenterCell(grid);
-  const sign = cfg.contentId ? { cell: south } : { cell: [south[0], south[1] - 1] as [number, number] };
+  const sign = isHome ? undefined : { cell: south };
 
-  const building = cfg.interior
-    ? { cell: top, interior: cfg.interior }
-    : undefined;
+  const building = cfg.interior ? { cell: top, interior: cfg.interior } : undefined;
 
   return {
     id: cfg.id,
@@ -349,7 +401,7 @@ function buildSpec(cfg: IslandConfig, neighbors: Record<string, BridgeSpec[]>): 
     sign,
     building,
     ringIndex: cfg.ringIndex,
-    waterfalls: cfg.waterfalls,
+    waterfalls: isHome ? ['e'] : cfg.waterfalls,
   };
 }
 

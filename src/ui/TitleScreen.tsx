@@ -4,7 +4,7 @@ import { profile } from '../data/profile';
 // engine); this is the DOM overlay with two doors.
 export default function TitleScreen({ onBegin, onSkip }: { onBegin: () => void; onSkip: () => void }) {
   return (
-    <div className="font-pixel fixed inset-0 z-40 flex flex-col items-center justify-center gap-6 bg-gradient-to-b from-transparent via-[#07060d]/30 to-[#07060d]/80 px-4 text-center">
+    <div className="font-pixel fixed inset-0 z-40 flex flex-col items-center justify-center gap-6 bg-gradient-to-b from-transparent via-transparent to-[#07060d]/55 px-4 text-center">
       <div>
         <h1 className="text-4xl text-[#f6efdd] sm:text-6xl" style={{ textShadow: '3px 3px 0 #07060d' }}>
           RESUME QUEST

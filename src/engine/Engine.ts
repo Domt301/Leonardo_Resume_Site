@@ -8,10 +8,10 @@ import { Player } from '../character/Player';
 import { Interior } from '../world/Interior';
 import { AudioManager } from './Audio';
 import { nearestTarget, type InteractionTarget, type InteractionAction } from '../world/Interactable';
+import { disposeLabelTextures } from '../art/labelTexture';
 import { useGameStore, gameState } from '../store/useGameStore';
 import { islandById } from '../data/islands';
 import { jobById } from '../data/jobs';
-import { RAMP } from '../art/palette';
 
 // The Engine (spec §3, §4). Boots three.js, runs a fixed-timestep loop fully
 // decoupled from React, and bridges to the store imperatively. React renders the
@@ -19,6 +19,7 @@ import { RAMP } from '../art/palette';
 
 const FIXED_DT = 1 / 60;
 const MAX_FRAME = 0.1;
+const TITLE_TARGET = new THREE.Vector3(0, 1, -1); // home island centre for the title postcard
 
 export class Engine {
   private renderer: Renderer;
@@ -54,12 +55,12 @@ export class Engine {
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     this.renderer = new Renderer(canvas);
-    this.scene.background = new THREE.Color(RAMP.dark[0]);
+    this.scene.background = new THREE.Color('#243a55'); // warm deep-teal horizon, not near-black
     this.scene.add(this.archipelago.group);
     this.scene.add(this.player.root);
 
-    // lighting (spec §4.3)
-    this.sun = new THREE.DirectionalLight(0xffffff, 2.2);
+    // lighting (spec §4.3) — warm sunny key + bright sky fill
+    this.sun = new THREE.DirectionalLight(new THREE.Color('#fff1d0'), 2.6);
     this.sun.castShadow = true;
     this.sun.shadow.mapSize.set(2048, 2048);
     const cam = this.sun.shadow.camera as THREE.OrthographicCamera;
@@ -71,7 +72,7 @@ export class Engine {
     cam.far = 120;
     this.scene.add(this.sun);
     this.scene.add(this.sun.target);
-    this.hemi = new THREE.HemisphereLight(new THREE.Color('#8fb4e8'), new THREE.Color('#3a3048'), 0.85);
+    this.hemi = new THREE.HemisphereLight(new THREE.Color('#bcdcff'), new THREE.Color('#6b7a52'), 0.9);
     this.scene.add(this.hemi);
 
     this.applySettings();
@@ -143,12 +144,55 @@ export class Engine {
     this.iso.setTargetInstant(spawn.pos);
     useGameStore.getState().setCurrentIsland(islandId);
     this.updateCameraBounds(islandId);
+    this.applyThemeLighting(islandById(islandId)?.theme);
     if (showCard) this.showTitleFor(islandId);
+  }
+
+  /**
+   * Warm, sunny world lighting with a little per-theme character so islands stay
+   * distinct. Twilight (Rural Metro) intentionally stays dim + foggy.
+   */
+  private applyThemeLighting(theme: string | undefined): void {
+    // sunny base
+    this.sun.color.set('#fff1d0');
+    this.sun.intensity = 2.6;
+    this.hemi.color.set('#bcdcff');
+    this.hemi.groundColor.set('#6b7a52');
+    this.hemi.intensity = 0.9;
+    this.scene.fog = null;
+    this.scene.background = new THREE.Color('#243a55');
+    switch (theme) {
+      case 'twilight':
+        // a warm, readable dusk — dimmer and pinker than day, not black.
+        // (No THREE.Fog: the ortho rig sits ~120u back, so distance fog would
+        // haze the whole scene at once.)
+        this.sun.color.set('#ffb069');
+        this.sun.intensity = 2.1;
+        this.hemi.color.set('#9a86b8');
+        this.hemi.groundColor.set('#5a4a48');
+        this.hemi.intensity = 1.0;
+        this.scene.background = new THREE.Color('#3a2f52');
+        break;
+      case 'arcane':
+        this.hemi.color.set('#a7dbe6');
+        this.scene.background = new THREE.Color('#204a5a');
+        break;
+      case 'vault':
+        this.sun.color.set('#ffe6b0');
+        this.hemi.groundColor.set('#7a6a3c');
+        break;
+      case 'coastal':
+        this.hemi.color.set('#cfeaff');
+        this.scene.background = new THREE.Color('#1f4d70');
+        break;
+    }
   }
 
   /** Leave the title screen and begin play (spec §11.5). */
   beginGame(): void {
+    this.iso.setHalfHeight(9);
     this.iso.setAzimuthInstant(Math.PI / 4);
+    this.iso.setTargetInstant(this.player.position);
     useGameStore.getState().setPhase('playing');
     this.showTitleFor(this.archipelago.activeId);
   }
@@ -208,9 +252,8 @@ export class Engine {
     this.interior = null;
     this.mode = 'world';
     this.archipelago.group.visible = true;
-    this.sun.intensity = 2.2;
-    this.hemi.intensity = 0.55;
     const id = this.archipelago.activeId;
+    this.applyThemeLighting(islandById(id)?.theme);
     const spawn = this.archipelago.spawnPoint(id);
     this.player.spawn(spawn.pos, spawn.tier);
     this.iso.setTargetInstant(spawn.pos);
@@ -309,6 +352,7 @@ export class Engine {
       this.archipelago.setActive(s.islandId);
       useGameStore.getState().setCurrentIsland(s.islandId);
       this.updateCameraBounds(s.islandId);
+      this.applyThemeLighting(islandById(s.islandId)?.theme);
       this.showTitleFor(s.islandId);
     }
   }
@@ -347,6 +391,14 @@ export class Engine {
       case 'contact':
         store.openPanel({ kind: 'contact' });
         this.audio.panel(true);
+        break;
+      case 'openmap':
+        this.audio.interact();
+        store.setPhase('map');
+        break;
+      case 'travel':
+        this.audio.interact();
+        this.fastTravel(a.to);
         break;
       case 'enter':
         this.audio.interact();
@@ -406,13 +458,15 @@ export class Engine {
 
   private render(): void {
     const st = gameState();
-    // title screen: slowly rotate the home island (spec §11.5)
-    if (st.phase === 'title' && !st.settings.reducedMotion) {
-      this.titleTime += 1 / 60;
+    if (st.phase === 'title') {
+      // pulled-back, centred "postcard" of the home island, slowly rotating
+      if (!st.settings.reducedMotion) this.titleTime += 1 / 60;
+      this.iso.setHalfHeight(13);
       this.iso.setAzimuthInstant(Math.PI / 4 + this.titleTime * 0.05);
+      this.iso.setTargetInstant(TITLE_TARGET);
+    } else {
+      this.iso.update(this.player.position, Math.min(0.05, FIXED_DT), st.settings.reducedMotion);
     }
-    // camera follow + screen-relative key light
-    this.iso.update(this.player.position, Math.min(0.05, FIXED_DT), st.settings.reducedMotion);
     const dir = this.iso.keyLightDirection();
     this.sun.position.copy(this.player.position).addScaledVector(dir, 40);
     this.sun.target.position.copy(this.player.position);
@@ -428,6 +482,7 @@ export class Engine {
     this.archipelago.dispose();
     this.player.dispose();
     this.audio.dispose();
+    disposeLabelTextures();
     this.sun.dispose();
     this.renderer.dispose();
   }

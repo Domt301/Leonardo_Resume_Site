@@ -1,10 +1,14 @@
 import * as THREE from 'three';
-import type { IslandSpec, StairSpec } from '../data/types';
+import type { IslandSpec, StairSpec, PropPlacement } from '../data/types';
 import { buildTerrain, LEVEL_HEIGHT, TILE } from './Terrain';
 import { buildFoamRing, buildWaterfall } from './Water';
 import { STATIC_PROPS, DYNAMIC_PROPS, isDynamic, mergePartsByColor } from '../props/registry';
+import { buildSignboard, type SignboardHandle } from '../props/signboard';
+import { signTexture, titleTexture, type IconKind } from '../art/labelTexture';
 import { RAMP } from '../art/palette';
 import { box } from '../art/geometry';
+import { profile } from '../data/profile';
+import { jobById } from '../data/jobs';
 import type { Part, DynamicProp } from '../props/types';
 import type { InteractionTarget } from './Interactable';
 
@@ -23,6 +27,7 @@ export class Island {
   readonly rows: number;
   readonly cols: number;
   private dyn: DynamicProp[] = [];
+  private signboards: SignboardHandle[] = [];
   private terrainDispose: () => void;
   private geoms: THREE.BufferGeometry[] = [];
   readonly targets: InteractionTarget[] = [];
@@ -48,6 +53,10 @@ export class Island {
     for (const pl of spec.props) {
       const [wx, , wz] = this.cellLocalCenter(pl.cell[0], pl.cell[1]);
       const topY = this.cellTop(pl.cell[0], pl.cell[1]);
+      if (pl.kind === 'titleBoard' || pl.kind === 'signpost' || pl.kind.startsWith('board:')) {
+        this.placeSignboard(pl, wx, topY, wz);
+        continue;
+      }
       if (isDynamic(pl.kind)) {
         const seed = pl.cell[0] * 91 + pl.cell[1] * 13;
         const d = DYNAMIC_PROPS[pl.kind](seed);
@@ -70,6 +79,19 @@ export class Island {
     for (const mesh of mergePartsByColor(staticParts)) {
       this.geoms.push(mesh.geometry);
       this.group.add(mesh);
+    }
+
+    // job-island outdoor signpost (labeled) at the sign cell
+    const cid = spec.contentId;
+    if (spec.sign && cid && cid !== 'sigils' && cid !== 'academy' && spec.id !== 'home') {
+      const job = jobById(cid);
+      const [swx, , swz] = this.cellLocalCenter(spec.sign.cell[0], spec.sign.cell[1]);
+      const sy = this.cellTop(spec.sign.cell[0], spec.sign.cell[1]);
+      const h = buildSignboard(signTexture(job ? job.company : spec.name, 'experience'), 'sign');
+      // offset beside the spawn point so the board doesn't overlap the player
+      h.group.position.set(swx + 1.8, sy, swz);
+      this.signboards.push(h);
+      this.group.add(h.group);
     }
 
     // foam ring
@@ -180,56 +202,65 @@ export class Island {
       });
     }
 
-    // sign
-    if (spec.sign) {
+    // job-island sign
+    if (spec.sign && spec.contentId && spec.contentId !== 'sigils' && spec.contentId !== 'academy') {
       const pos = this.worldCellCenter(spec.sign.cell[0], spec.sign.cell[1]);
       pos.y += 0.6;
-      if (spec.contentId && spec.contentId !== 'sigils' && spec.contentId !== 'academy') {
-        this.targets.push({
-          id: `${spec.id}:sign`,
-          action: { type: 'sign', jobId: spec.contentId },
-          position: pos,
-          radius: 2,
-          hint: 'Read the sign',
-        });
-      } else if (spec.id === 'home') {
-        this.targets.push({
-          id: 'home:summary',
-          action: { type: 'summary' },
-          position: pos,
-          radius: 2,
-          hint: 'Read the notice board',
-        });
-      }
+      this.targets.push({
+        id: `${spec.id}:sign`,
+        action: { type: 'sign', jobId: spec.contentId },
+        position: pos,
+        radius: 2.4,
+        hint: 'Read the sign',
+      });
     }
 
-    // home-only interactables from hero props
+    // home navigation boards — action + hint derived from each board's tag
     if (spec.id === 'home') {
       for (const pl of spec.props) {
-        if (pl.kind === 'armory') {
-          const pos = this.worldCellCenter(pl.cell[0], pl.cell[1]);
-          pos.y += 0.6;
-          this.targets.push({
-            id: 'home:skills',
-            action: { type: 'skills' },
-            position: pos,
-            radius: 2,
-            hint: 'Open the Armory',
-          });
-        }
-        if (pl.kind === 'mailbox') {
-          const pos = this.worldCellCenter(pl.cell[0], pl.cell[1]);
-          pos.y += 0.6;
-          this.targets.push({
-            id: 'home:contact',
-            action: { type: 'contact' },
-            position: pos,
-            radius: 2,
-            hint: 'Check the mailbox',
-          });
-        }
+        if (!pl.kind.startsWith('board:') || !pl.tag) continue;
+        const t = this.homeBoardTarget(pl);
+        if (t) this.targets.push(t);
       }
     }
+  }
+
+  private homeBoardTarget(pl: PropPlacement): InteractionTarget | null {
+    const pos = this.worldCellCenter(pl.cell[0], pl.cell[1]);
+    pos.y += 0.7;
+    const tag = pl.tag!;
+    const base = { id: `home:${tag}`, position: pos, radius: 2.2 };
+    if (tag === 'map') return { ...base, action: { type: 'openmap' }, hint: 'Walk the career (open map)' };
+    if (tag === 'skills') return { ...base, action: { type: 'skills' }, hint: 'Open the Armory (skills)' };
+    if (tag === 'summary') return { ...base, action: { type: 'summary' }, hint: 'Read about Leonardo' };
+    if (tag === 'contact') return { ...base, action: { type: 'contact' }, hint: 'Check the mailbox' };
+    if (tag === 'travel:sigils')
+      return { ...base, action: { type: 'travel', to: 'sigils' }, hint: 'Travel to the Hall of Sigils' };
+    if (tag === 'travel:academy')
+      return { ...base, action: { type: 'travel', to: 'academy' }, hint: 'Travel to the Academy' };
+    return null;
+  }
+
+  private placeSignboard(pl: PropPlacement, wx: number, topY: number, wz: number): void {
+    let handle: SignboardHandle;
+    if (pl.kind === 'titleBoard') {
+      handle = buildSignboard(
+        titleTexture(profile.name.toUpperCase(), profile.title.toUpperCase()),
+        'title',
+      );
+    } else if (pl.kind.startsWith('board:')) {
+      const parts = pl.kind.split(':');
+      const label = parts[1] ?? '';
+      const icon = (parts[2] as IconKind) ?? 'plate';
+      handle = buildSignboard(signTexture(label, icon), 'sign');
+    } else {
+      const job = this.spec.contentId ? jobById(this.spec.contentId) : undefined;
+      handle = buildSignboard(signTexture(job ? job.company : this.spec.name, 'experience'), 'sign');
+    }
+    handle.group.position.set(wx, topY, wz);
+    if (pl.rot) handle.group.rotation.y = pl.rot;
+    this.signboards.push(handle);
+    this.group.add(handle.group);
   }
 
   update(t: number, dt: number): void {
@@ -242,6 +273,7 @@ export class Island {
       d.dispose();
       if (d.light) d.light.dispose?.();
     }
+    for (const s of this.signboards) s.dispose();
     for (const g of this.geoms) g.dispose();
     this.group.removeFromParent();
   }
