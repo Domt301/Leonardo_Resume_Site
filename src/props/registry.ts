@@ -52,20 +52,55 @@ const rock: StaticBuilder = (s) => {
   return [p(g, RAMP.stone[2])];
 };
 
-const rockArch: StaticBuilder = (s) => [
-  p(place(blob(0.55, s, 0, 0.25), -0.9, 0.6, 0).scale(1, 1.6, 1), RAMP.stone[2]),
-  p(place(blob(0.55, s + 5, 0, 0.25), 0.9, 0.6, 0).scale(1, 1.6, 1), RAMP.stone[2]),
-  p(place(box(2.4, 0.5, 0.7), 0, 1.7, 0), RAMP.stone[1]),
-];
+const rockArch: StaticBuilder = (s) => {
+  const parts: Part[] = [];
+  // two legs (stacked stone) with a see-through gap between them
+  for (const sx of [-0.95, 0.95]) {
+    parts.push(p(place(box(0.75, 1.5, 0.8), sx, 0, 0), RAMP.stone[2]));
+    parts.push(p(place(blob(0.5, s + (sx > 0 ? 3 : 0), 0, 0.22), sx, 1.5, 0), RAMP.stone[3]));
+  }
+  // spanning keystone across the top, leaving the arch opening below
+  parts.push(p(place(box(2.7, 0.65, 0.8), 0, 1.75, 0), RAMP.stone[1]));
+  parts.push(p(place(box(0.5, 0.4, 0.82), 0, 1.7, 0), RAMP.stone[2])); // keystone accent
+  return parts;
+};
+
+const flower: StaticBuilder = (s) => {
+  const colors = [RAMP.bone[4], RAMP.gold[4], RAMP.crimson[3], RAMP.violet[3], RAMP.royal[4]];
+  const col = colors[Math.floor(hash(s, 7) * colors.length)];
+  return [
+    p(place(box(0.03, 0.2, 0.03), 0, 0, 0), RAMP.leaf[3], false),
+    p(place(box(0.13, 0.13, 0.03), 0, 0.24, 0), col, false),
+    p(place(box(0.05, 0.05, 0.05), 0, 0.24, 0.02), RAMP.gold[4], false),
+  ];
+};
 
 // ── Structures ───────────────────────────────────────────────────────────────
 const house: StaticBuilder = () => {
   const parts: Part[] = [];
+  // cream walls
   parts.push(p(box(2.2, 1.4, 1.9), RAMP.bone[2]));
-  parts.push(p(place(prism(2.5, 0.9, 2.2), 0, 1.4, 0), RAMP.crimson[1]));
-  parts.push(p(place(box(0.6, 0.9, 0.1), 0, 0, 0.95), RAMP.wood[2])); // door
-  parts.push(p(place(box(0.45, 0.45, 0.1), -0.7, 0.8, 0.95), RAMP.teal[3])); // window
-  parts.push(p(place(box(0.45, 0.45, 0.1), 0.7, 0.8, 0.95), RAMP.teal[3]));
+  // timber corner posts + top beam
+  for (const sx of [-1.05, 1.05])
+    for (const sz of [-0.9, 0.9]) parts.push(p(place(box(0.12, 1.42, 0.12), sx, 0, sz), RAMP.wood[1]));
+  parts.push(p(place(box(2.32, 0.14, 2.02), 0, 1.32, 0), RAMP.wood[1]));
+  // shingled gable roof: blue-slate prism base + stepped shingle rows
+  parts.push(p(place(prism(2.7, 0.98, 2.3), 0, 1.42, 0), RAMP.royal[2]));
+  for (let i = 0; i < 5; i++) {
+    const t = i / 5;
+    const y = 1.42 + t * 0.98 + 0.02;
+    const z = 1.15 * (1 - t) + 0.02;
+    const shade = i % 2 ? RAMP.royal[1] : RAMP.royal[3];
+    parts.push(p(place(box(2.7 - t * 0.2, 0.05, 0.16), 0, y, z), shade));
+    parts.push(p(place(box(2.7 - t * 0.2, 0.05, 0.16), 0, y, -z), shade));
+  }
+  // door + framed windows
+  parts.push(p(place(box(0.62, 0.92, 0.12), 0, 0, 0.95), RAMP.wood[2]));
+  parts.push(p(place(box(0.14, 0.14, 0.14), 0.2, 0.42, 0.99), RAMP.gold[3])); // knob
+  for (const wx of [-0.7, 0.7]) {
+    parts.push(p(place(box(0.5, 0.5, 0.1), wx, 0.82, 0.95), RAMP.wood[3]));
+    parts.push(p(place(box(0.34, 0.34, 0.13), wx, 0.82, 0.96), RAMP.teal[3]));
+  }
   return parts;
 };
 
@@ -218,6 +253,7 @@ export const STATIC_PROPS: Record<string, StaticBuilder> = {
   fence,
   signpost,
   titleBoard,
+  flower,
   terminal,
   altar,
   workbench,
@@ -329,11 +365,47 @@ const gear: DynamicBuilder = () => {
   };
 };
 
+const chicken: DynamicBuilder = (s) => {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(blob(0.18, s, 0, 0.14), toon(RAMP.bone[4]));
+  body.scale.set(1.05, 0.9, 1.3);
+  body.position.y = 0.2;
+  body.castShadow = true;
+  const tail = new THREE.Mesh(cone(0.12, 0.2, 5), toon(RAMP.bone[3]));
+  tail.rotation.x = -1.1;
+  tail.position.set(0, 0.28, -0.18);
+  const head = new THREE.Mesh(box(0.13, 0.15, 0.13, false), toon(RAMP.bone[4]));
+  head.position.set(0, 0.36, 0.15);
+  const beak = new THREE.Mesh(cone(0.045, 0.09, 4), toon(RAMP.gold[3]));
+  beak.rotation.x = Math.PI / 2;
+  beak.position.set(0, 0.35, 0.25);
+  const comb = new THREE.Mesh(box(0.05, 0.07, 0.11, false), toon(RAMP.crimson[3]));
+  comb.position.set(0, 0.45, 0.15);
+  g.add(body, tail, head, beak, comb);
+  return {
+    object: g,
+    update: (t) => {
+      const peck = Math.max(0, Math.sin(t * 0.8 + s));
+      head.position.y = 0.36 - peck * 0.14;
+      head.rotation.x = peck * 0.6;
+      beak.position.y = 0.35 - peck * 0.16;
+    },
+    dispose: () => {
+      body.geometry.dispose();
+      tail.geometry.dispose();
+      head.geometry.dispose();
+      beak.geometry.dispose();
+      comb.geometry.dispose();
+    },
+  };
+};
+
 export const DYNAMIC_PROPS: Record<string, DynamicBuilder> = {
   lantern,
   brazier,
   waterwheel,
   gear,
+  chicken,
 };
 
 export function isDynamic(kind: string): boolean {
