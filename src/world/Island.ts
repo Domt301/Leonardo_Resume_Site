@@ -245,7 +245,7 @@ export class Island {
     let handle: SignboardHandle;
     if (pl.kind === 'titleBoard') {
       handle = buildSignboard(
-        titleTexture(profile.name.toUpperCase(), profile.title.toUpperCase()),
+        titleTexture(profile.name.toUpperCase(), profile.tagline.toUpperCase()),
         'title',
       );
     } else if (pl.kind.startsWith('board:')) {

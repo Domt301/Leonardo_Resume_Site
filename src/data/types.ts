@@ -6,7 +6,10 @@
 
 export interface Profile {
   name: string;
+  /** Professional role (résumé, page title, contact). */
   title: string;
+  /** Hero tagline shown on the in-world title board. */
+  tagline: string;
   location: string;
   email: string;
   phone: string;

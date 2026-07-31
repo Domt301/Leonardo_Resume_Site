@@ -3,6 +3,7 @@ import type { Profile } from './types';
 export const profile: Profile = {
   name: 'Leonardo Wildt',
   title: 'Cloud Application Architect',
+  tagline: 'Engineer. Leader. Builder.',
   location: 'Atlanta, GA',
   email: 'leonardod.trimarchi@gmail.com',
   phone: '770.310.5875',
