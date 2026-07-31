@@ -1,8 +1,8 @@
 import type { Job } from './types';
 
-// Verbatim résumé content from spec §12.2–12.9.
-// Bullets flagged `unverified: true` are `⚠️ ADDED` inferred elaborations
-// awaiting Leonardo's sign-off — plausible, non-inflating, no invented metrics.
+// Résumé content from spec §12.2–12.9. The inferred `⚠️ ADDED` elaborations were
+// reviewed and approved by Leonardo, so no bullets carry `unverified: true`.
+// No metrics, dollar figures, percentages, team sizes, or client names invented.
 
 export const jobs: Job[] = [
   {
@@ -28,14 +28,10 @@ export const jobs: Job[] = [
       },
       {
         prop: 'dummy',
-        text: 'Mentoring developers through code review and pairing, with an emphasis on API contract design.',
-        unverified: true,
-      },
+        text: 'Mentoring developers through code review and pairing, with an emphasis on API contract design.',      },
       {
         prop: 'map',
-        text: 'Partnering with product and business stakeholders to turn ambiguous requirements into scoped, deliverable API work.',
-        unverified: true,
-      },
+        text: 'Partnering with product and business stakeholders to turn ambiguous requirements into scoped, deliverable API work.',      },
     ],
     plaque: ['Node.js', 'AWS API Gateway', 'TypeScript', 'REST', 'Generative AI prototyping', 'Agile'],
     mark: {
@@ -59,14 +55,10 @@ export const jobs: Job[] = [
       { prop: 'draftingTable', text: 'Leading team discussions on architecture and coding standards.' },
       {
         prop: 'forge',
-        text: 'Containerizing services and standardizing local development so the team could run the stack end to end.',
-        unverified: true,
-      },
+        text: 'Containerizing services and standardizing local development so the team could run the stack end to end.',      },
       {
         prop: 'scrollRack',
-        text: 'Documenting frontend module boundaries so independently deployed apps could compose without collisions.',
-        unverified: true,
-      },
+        text: 'Documenting frontend module boundaries so independently deployed apps could compose without collisions.',      },
     ],
     plaque: ['.NET Core', 'C#', 'React', 'single-spa', 'Docker', 'REST'],
     mark: {
@@ -104,14 +96,10 @@ export const jobs: Job[] = [
       },
       {
         prop: 'dummy',
-        text: 'Running working sessions and enablement for customer engineering teams so they could operate what we built after handoff.',
-        unverified: true,
-      },
+        text: 'Running working sessions and enablement for customer engineering teams so they could operate what we built after handoff.',      },
       {
         prop: 'ledger',
-        text: 'Translating technical architecture into terms business sponsors could fund and defend.',
-        unverified: true,
-      },
+        text: 'Translating technical architecture into terms business sponsors could fund and defend.',      },
     ],
     plaque: [
       'AWS Lambda',
@@ -166,9 +154,7 @@ export const jobs: Job[] = [
       },
       {
         prop: 'ledger',
-        text: 'Reducing hosting cost by matching each workload to the right Azure compute model instead of a single default.',
-        unverified: true,
-      },
+        text: 'Reducing hosting cost by matching each workload to the right Azure compute model instead of a single default.',      },
     ],
     plaque: [
       'Azure Functions',
@@ -289,9 +275,7 @@ export const jobs: Job[] = [
       { prop: 'dummy', text: 'Participated in community education initiatives.' },
       {
         prop: 'map',
-        text: 'Six years of making irreversible decisions with incomplete information under time pressure — the habit that still shapes how I run an incident or a launch.',
-        unverified: true,
-      },
+        text: 'Six years of making irreversible decisions with incomplete information under time pressure — the habit that still shapes how I run an incident or a launch.',      },
     ],
     plaque: ['Critical care transport', 'Triage', 'Community education', 'Crisis decision-making'],
     mark: {
