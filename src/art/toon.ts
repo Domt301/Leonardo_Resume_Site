@@ -29,6 +29,18 @@ export function toonRamp(name: keyof typeof RAMP, step = 2): THREE.MeshToonMater
   return toon(RAMP[name][step]);
 }
 
+const texturedCache = new Map<string, THREE.MeshToonMaterial>();
+/** Toon material with a tiled detail map that multiplies the base colour. */
+export function toonTextured(hex: string, map: THREE.Texture, key: string): THREE.MeshToonMaterial {
+  const ck = `${hex}|${key}`;
+  let m = texturedCache.get(ck);
+  if (!m) {
+    m = new THREE.MeshToonMaterial({ color: new THREE.Color(hex), gradientMap, map, vertexColors: true });
+    texturedCache.set(ck, m);
+  }
+  return m;
+}
+
 const emissiveCache = new Map<string, THREE.MeshBasicMaterial>();
 /** Flat unlit material for glowing runes / sigils / lantern cores. */
 export function emissive(hex: string): THREE.MeshBasicMaterial {
@@ -44,7 +56,9 @@ export function emissive(hex: string): THREE.MeshBasicMaterial {
 export function disposeMaterialCaches(): void {
   cache.forEach((m) => m.dispose());
   emissiveCache.forEach((m) => m.dispose());
+  texturedCache.forEach((m) => m.dispose());
   cache.clear();
   emissiveCache.clear();
+  texturedCache.clear();
   gradientMap.dispose();
 }
