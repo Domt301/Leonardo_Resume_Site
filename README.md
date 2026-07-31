@@ -23,6 +23,27 @@ playing:
   game and the HTML overlay — one source of truth.
 - The PDF downloads from the overlay and the pause menu.
 
+## Two ways each scene can render (hybrid illustration layer)
+
+The real-time 3D world has a quality ceiling below a hand-painted illustration.
+So every scene (the home/landing + each job island + Hall of Sigils + Academy)
+can optionally be backed by a **static illustration with clickable hotspots** —
+giving a pixel-perfect, reference-grade look on the screens that matter — while
+the 3D world remains for exploration behind "Begin the quest / Explore in 3D".
+
+- Drop an original illustration at **`public/art/<scene>.png`** and set its
+  `image` path in `src/data/scenes.ts`. If a scene has no image, it simply uses
+  the 3D renderer (graceful fallback — nothing breaks before art exists).
+- **Author hotspots visually:** open the app with **`?calibrate`** in the URL,
+  drag a box over each interactive element, and copy the printed `{x,y,w,h}` into
+  that scene's `hotspots` in `src/data/scenes.ts`. Hotspot actions reuse the same
+  `InteractionAction`s the 3D world uses (open a panel, fast-travel, open the map,
+  claim a Mark/sigil), so both renderers behave identically.
+- `home` hotspots are pre-authored to the reference layout (EXPERIENCE →
+  archipelago map, CERTIFICATIONS → Hall of Sigils, SKILLS, ABOUT, CONTACT, and a
+  Begin-the-quest area). See `public/art/README.txt` for filenames + the
+  originality guardrail (original art only — Leonardo, never Link/Nintendo).
+
 ## Tech
 
 Vite · React 18 + TypeScript (strict) · three.js (plain, no react-three-fiber) ·

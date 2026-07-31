@@ -8,6 +8,7 @@ import { Player } from '../character/Player';
 import { Interior } from '../world/Interior';
 import { AudioManager } from './Audio';
 import { nearestTarget, type InteractionTarget, type InteractionAction } from '../world/Interactable';
+import { runAction } from './actions';
 import { disposeLabelTextures } from '../art/labelTexture';
 import { useGameStore, gameState } from '../store/useGameStore';
 import { islandById } from '../data/islands';
@@ -63,6 +64,8 @@ export class Engine {
     this.sun = new THREE.DirectionalLight(new THREE.Color('#fff1d0'), 2.6);
     this.sun.castShadow = true;
     this.sun.shadow.mapSize.set(2048, 2048);
+    this.sun.shadow.radius = 3.5; // soft PCF contact shadows
+    this.sun.shadow.bias = -0.0004;
     const cam = this.sun.shadow.camera as THREE.OrthographicCamera;
     cam.left = -30;
     cam.right = 30;
@@ -190,7 +193,7 @@ export class Engine {
 
   /** Leave the title screen and begin play (spec §11.5). */
   beginGame(): void {
-    this.iso.setHalfHeight(9);
+    this.iso.setHalfHeight(8);
     this.iso.setAzimuthInstant(Math.PI / 4);
     this.iso.setTargetInstant(this.player.position);
     useGameStore.getState().setPhase('playing');
@@ -373,67 +376,20 @@ export class Engine {
   }
 
   private runAction(a: InteractionAction): void {
-    const store = useGameStore.getState();
-    switch (a.type) {
-      case 'sign':
-        store.markSignRead(a.jobId);
-        store.openPanel({ kind: 'sign', jobId: a.jobId });
-        this.audio.panel(true);
-        break;
-      case 'summary':
-        store.openPanel({ kind: 'summary' });
-        this.audio.panel(true);
-        break;
-      case 'skills':
-        store.openPanel({ kind: 'skills' });
-        this.audio.panel(true);
-        break;
-      case 'contact':
-        store.openPanel({ kind: 'contact' });
-        this.audio.panel(true);
-        break;
-      case 'openmap':
-        this.audio.interact();
-        store.setPhase('map');
-        break;
-      case 'travel':
-        this.audio.interact();
-        this.fastTravel(a.to);
-        break;
-      case 'enter':
-        this.audio.interact();
-        this.enterInterior(a.interior, a.islandName);
-        break;
-      case 'npc':
-        this.interior?.openNpcDialogue();
-        this.audio.panel(true);
-        break;
-      case 'bullet':
-        this.interior?.openBullet(a.jobId, a.index);
-        this.audio.panel(true);
-        break;
-      case 'chest':
-        store.earnMark(a.jobId);
-        this.player.triggerClaim();
-        store.openPanel({ kind: 'mark', jobId: a.jobId });
-        this.audio.markEarned();
-        break;
-      case 'sigil':
-        store.claimSigil(a.certId);
-        this.player.triggerClaim();
-        store.openPanel({ kind: 'cert', certId: a.certId });
-        this.audio.sigilClaimed();
-        break;
-      case 'education':
-        store.claimCredential(a.eduId);
-        store.openPanel({ kind: 'education', eduId: a.eduId });
-        this.audio.panel(true);
-        break;
-      case 'exit':
-        this.audio.interact();
-        this.exitInterior();
-        break;
-    }
+    runAction(a, {
+      travel: (id) => this.fastTravel(id),
+      enter: (interior, name) => this.enterInterior(interior, name),
+      npc: () => this.interior?.openNpcDialogue(),
+      bullet: (jobId, index) => this.interior?.openBullet(jobId, index),
+      exit: () => this.exitInterior(),
+      claim: () => this.player.triggerClaim(),
+      sound: (k) => {
+        if (k === 'panel') this.audio.panel(true);
+        else if (k === 'interact') this.audio.interact();
+        else if (k === 'mark') this.audio.markEarned();
+        else if (k === 'sigil') this.audio.sigilClaimed();
+      },
+    });
   }
 
   private handleClick(ndc: THREE.Vector2): void {

@@ -14,6 +14,9 @@ import { create } from 'zustand';
 
 export type Phase = 'title' | 'loading' | 'playing' | 'paused' | 'map' | 'resume';
 
+/** Which renderer backs the current scene: the static illustration or the 3D world. */
+export type ViewMode = 'art' | '3d';
+
 export type PanelState =
   | { kind: 'sign'; jobId: string }
   | { kind: 'summary' }
@@ -34,6 +37,7 @@ export interface Settings {
 
 export interface GameState {
   phase: Phase;
+  view: ViewMode;
   currentIsland: string;
   inInterior: string | null;
   marks: Record<string, boolean>;
@@ -49,6 +53,7 @@ export interface GameState {
 
   // ── actions ────────────────────────────────────────────────────────────────
   setPhase: (p: Phase) => void;
+  setView: (v: ViewMode) => void;
   setCurrentIsland: (id: string) => void;
   enterInterior: (id: string) => void;
   exitInterior: () => void;
@@ -69,7 +74,7 @@ const STORAGE_KEY = 'resume-quest:v2';
 
 const defaultSettings: Settings = {
   sound: false, // audio starts muted (spec §16)
-  pixelSize: 4,
+  pixelSize: 3,
   isoAngle: 30,
   reducedMotion:
     typeof window !== 'undefined' &&
@@ -102,6 +107,7 @@ const uniqPush = (arr: string[], v: string) => (arr.includes(v) ? arr : [...arr,
 
 export const useGameStore = create<GameState>((set) => ({
   phase: 'title',
+  view: '3d',
   currentIsland: 'home',
   inInterior: null,
   marks: {},
@@ -116,6 +122,7 @@ export const useGameStore = create<GameState>((set) => ({
   ...loadPersisted(),
 
   setPhase: (p) => set({ phase: p }),
+  setView: (v) => set({ view: v }),
   setCurrentIsland: (id) => set((s) => ({ currentIsland: id, visited: uniqPush(s.visited, id) })),
   enterInterior: (id) => set({ inInterior: id }),
   exitInterior: () => set({ inInterior: null }),
