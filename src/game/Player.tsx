@@ -126,10 +126,10 @@ export default function Player() {
   return (
     <group ref={group} position={[spawn[0], playerRuntime.y, spawn[2]]}>
       <group ref={bodyGroup}>
-        {/* black polo torso */}
+        {/* black shirt torso */}
         <mesh position={[0, 0.58, 0]} castShadow>
           <cylinderGeometry args={[0.27, 0.34, 0.66, 8]} />
-          <meshStandardMaterial color={RAMP.cloth[1]} flatShading />
+          <meshStandardMaterial color="#0d0d0d" flatShading />
         </mesh>
         {/* polo collar */}
         <mesh position={[0, 0.92, 0]}>
@@ -173,13 +173,13 @@ export default function Player() {
           <boxGeometry args={[0.13, 0.11, 0.08]} />
           <meshStandardMaterial color={RAMP.hair[1]} flatShading />
         </mesh>
-        {/* arms: skin with short polo-sleeve caps (nested so they swing together) */}
+        {/* arms: skin with short black shirt-sleeve caps (nested so they swing together) */}
         <mesh ref={leftArm} position={[-0.36, 0.82, 0]} castShadow>
           <boxGeometry args={[0.13, 0.5, 0.13]} />
           <meshStandardMaterial color={RAMP.skin[3]} flatShading />
           <mesh position={[0, 0.17, 0]}>
             <boxGeometry args={[0.16, 0.18, 0.16]} />
-            <meshStandardMaterial color={RAMP.cloth[1]} flatShading />
+            <meshStandardMaterial color="#0d0d0d" flatShading />
           </mesh>
         </mesh>
         <mesh ref={rightArm} position={[0.36, 0.82, 0]} castShadow>
@@ -187,18 +187,18 @@ export default function Player() {
           <meshStandardMaterial color={RAMP.skin[3]} flatShading />
           <mesh position={[0, 0.17, 0]}>
             <boxGeometry args={[0.16, 0.18, 0.16]} />
-            <meshStandardMaterial color={RAMP.cloth[1]} flatShading />
+            <meshStandardMaterial color="#0d0d0d" flatShading />
           </mesh>
         </mesh>
       </group>
-      {/* legs (outside the bob group so feet stay planted) */}
+      {/* denim jeans legs (outside the bob group so feet stay planted) */}
       <mesh ref={leftLeg} position={[-0.14, 0.22, 0]} castShadow>
         <boxGeometry args={[0.14, 0.42, 0.16]} />
-        <meshStandardMaterial color={RAMP.cloth[3]} flatShading />
+        <meshStandardMaterial color="#3b5c8f" flatShading />
       </mesh>
       <mesh ref={rightLeg} position={[0.14, 0.22, 0]} castShadow>
         <boxGeometry args={[0.14, 0.42, 0.16]} />
-        <meshStandardMaterial color={RAMP.cloth[3]} flatShading />
+        <meshStandardMaterial color="#3b5c8f" flatShading />
       </mesh>
     </group>
   );
