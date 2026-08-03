@@ -1,7 +1,9 @@
 import { profile } from '../../content/profile';
 import { education } from '../../content/education';
+import { useUIStore } from '../../state/useUIStore';
 
 export default function AboutPanel() {
+  const openResumeForPrint = useUIStore((s) => s.openResumeForPrint);
   return (
     <div className="text-sm leading-relaxed text-[#d7cfbd]">
       {profile.summary.map((p, i) => (
@@ -25,13 +27,12 @@ export default function AboutPanel() {
         </div>
       ))}
 
-      <a
-        href={profile.resumeUrl}
-        download
+      <button
+        onClick={openResumeForPrint}
         className="mt-4 inline-block rounded border border-[#a36f1b] px-3 py-1 text-sm text-[#f2c750] hover:bg-[#a36f1b]/20"
       >
         Download PDF resume
-      </a>
+      </button>
     </div>
   );
 }

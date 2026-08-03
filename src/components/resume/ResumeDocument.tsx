@@ -4,6 +4,7 @@ import { experience, formatDates } from '../../content/experience';
 import { certifications } from '../../content/certifications';
 import { education } from '../../content/education';
 import { skills } from '../../content/skills';
+import { useUIStore } from '../../state/useUIStore';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The HTML resume — the non-negotiable "the resume must survive the game" path
@@ -22,6 +23,9 @@ interface Props {
 }
 
 export default function ResumeDocument({ standalone = false, onClose, fallbackNote }: Props) {
+  const printPending = useUIStore((s) => s.printPending);
+  const clearPrintPending = useUIStore((s) => s.clearPrintPending);
+
   useEffect(() => {
     document.body.classList.add('resume-open');
     const onKey = (e: KeyboardEvent) => {
@@ -34,6 +38,19 @@ export default function ResumeDocument({ standalone = false, onClose, fallbackNo
     };
   }, [onClose]);
 
+  // Buttons elsewhere in the app open this document and request a print; wait for
+  // the overlay to paint (double rAF) before invoking the browser print dialog.
+  useEffect(() => {
+    if (!printPending) return;
+    const id = requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        window.print();
+        clearPrintPending();
+      }),
+    );
+    return () => cancelAnimationFrame(id);
+  }, [printPending, clearPrintPending]);
+
   const externalLinks = [
     { label: 'LinkedIn', href: profile.linkedinUrl },
     { label: 'GitHub', href: profile.githubUrl },
@@ -41,6 +58,7 @@ export default function ResumeDocument({ standalone = false, onClose, fallbackNo
 
   return (
     <div
+      data-resume-doc
       className={`min-h-full w-full overflow-y-auto bg-[#0a0812] text-[#e7e1d2] ${standalone ? '' : 'fixed inset-0 z-50'}`}
       role="document"
       aria-label={`Resume of ${profile.name}`}
@@ -51,13 +69,12 @@ export default function ResumeDocument({ standalone = false, onClose, fallbackNo
         <div className="no-print sticky top-0 z-10 flex items-center justify-between border-b border-[#242838] bg-[#0a0812]/95 px-4 py-2 backdrop-blur">
           <span className="font-pixel text-xs text-[#b6a78d]">RESUME</span>
           <div className="flex gap-2">
-            <a
-              href={profile.resumeUrl}
-              download
+            <button
+              onClick={() => window.print()}
               className="rounded border border-[#a36f1b] px-3 py-1 text-sm text-[#f2c750] hover:bg-[#a36f1b]/20"
             >
               Download PDF
-            </a>
+            </button>
             <button
               onClick={onClose}
               className="rounded border border-[#626a8b] px-3 py-1 text-sm text-[#dacfb6] hover:bg-white/10"
@@ -106,13 +123,12 @@ export default function ResumeDocument({ standalone = false, onClose, fallbackNo
             <li>{profile.languages}</li>
           </ul>
           {standalone && (
-            <a
-              href={profile.resumeUrl}
-              download
+            <button
+              onClick={() => window.print()}
               className="no-print mt-4 inline-block rounded border border-[#a36f1b] px-3 py-1 text-sm text-[#f2c750] hover:bg-[#a36f1b]/20"
             >
               Download PDF resume
-            </a>
+            </button>
           )}
         </header>
 
@@ -203,10 +219,28 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 const PRINT_CSS = `
 @media print {
+  /* Let the resume flow across pages instead of being clipped to one viewport. */
+  html, body, #root, [data-site-shell] {
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  /* Isolate the resume: when it is the modal overlay, hide the game and chrome
+     (its siblings inside the SiteShell root) so only the resume prints. */
+  [data-site-shell] > *:not([data-resume-doc]) { display: none !important; }
+  [data-resume-doc] {
+    position: static !important;
+    inset: auto !important;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+  /* Drop the dark theme so text is legible on white regardless of the
+     browser's "print background graphics" setting. */
+  [data-resume-doc], [data-resume-doc] * { background: transparent !important; }
   .no-print { display: none !important; }
-  body, html { background: #fff !important; overflow: visible !important; }
   * { color: #111 !important; }
   a { text-decoration: none; }
-  .break-inside-avoid { break-inside: avoid; }
+  .break-inside-avoid, article { break-inside: avoid; }
 }
 `;
