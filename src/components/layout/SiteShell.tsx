@@ -40,7 +40,7 @@ export default function SiteShell() {
   useKeyboardControls(interact);
 
   return (
-    <div className="relative h-full w-full overflow-hidden">
+    <div data-site-shell className="relative h-full w-full overflow-hidden">
       <SkipLink />
       <Header />
 

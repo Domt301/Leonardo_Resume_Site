@@ -2,13 +2,13 @@ import { useRef } from 'react';
 import { useUIStore } from '../../state/useUIStore';
 import { useSettingsStore } from '../../state/useSettingsStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { profile } from '../../content/profile';
 
 /** Help overlay (spec §10.6): controls, navigation, accessibility, settings. */
 export default function HelpOverlay() {
   const open = useUIStore((s) => s.helpOpen);
   const setHelpOpen = useUIStore((s) => s.setHelpOpen);
   const setResumeOpen = useUIStore((s) => s.setResumeOpen);
+  const openResumeForPrint = useUIStore((s) => s.openResumeForPrint);
   const audioEnabled = useSettingsStore((s) => s.audioEnabled);
   const toggleAudio = useSettingsStore((s) => s.toggleAudio);
   const reducedMotion = useSettingsStore((s) => s.reducedMotion);
@@ -96,13 +96,15 @@ export default function HelpOverlay() {
           >
             Browse resume
           </button>
-          <a
-            href={profile.resumeUrl}
-            download
+          <button
+            onClick={() => {
+              setHelpOpen(false);
+              openResumeForPrint();
+            }}
             className="rounded border border-[#a36f1b] px-3 py-1 text-sm text-[#f2c750] hover:bg-[#a36f1b]/20"
           >
             Download PDF
-          </a>
+          </button>
         </div>
       </div>
     </div>
