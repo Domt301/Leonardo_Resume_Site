@@ -1,7 +1,6 @@
 import { useRef } from 'react';
 import { RESUME_SECTIONS } from '../../types/resume';
 import { SECTION_LABELS } from '../../app/routeMap';
-import { profile } from '../../content/profile';
 import { useUIStore } from '../../state/useUIStore';
 import { useRoutePanel } from '../../hooks/useRoutePanel';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
@@ -11,6 +10,7 @@ export default function MobileNav() {
   const open = useUIStore((s) => s.mobileNavOpen);
   const setOpen = useUIStore((s) => s.setMobileNavOpen);
   const setResumeOpen = useUIStore((s) => s.setResumeOpen);
+  const openResumeForPrint = useUIStore((s) => s.openResumeForPrint);
   const { openSection } = useRoutePanel();
   const menuRef = useRef<HTMLDivElement>(null);
   useFocusTrap(menuRef, open);
@@ -66,13 +66,15 @@ export default function MobileNav() {
                 </button>
               </li>
               <li>
-                <a
-                  href={profile.resumeUrl}
-                  download
-                  className="mt-1 block rounded border border-[#a36f1b] px-3 py-2 text-center text-sm uppercase tracking-wide text-[#f2c750]"
+                <button
+                  onClick={() => {
+                    setOpen(false);
+                    openResumeForPrint();
+                  }}
+                  className="mt-1 block w-full rounded border border-[#a36f1b] px-3 py-2 text-center text-sm uppercase tracking-wide text-[#f2c750]"
                 >
                   Resume PDF
-                </a>
+                </button>
               </li>
             </ul>
           </nav>

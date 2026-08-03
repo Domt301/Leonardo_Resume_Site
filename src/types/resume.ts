@@ -18,7 +18,6 @@ export interface Profile {
   languages: string;
   linkedinUrl: string;
   githubUrl: string;
-  resumeUrl: string;
   /** Multi-paragraph professional summary. */
   summary: string[];
 }
