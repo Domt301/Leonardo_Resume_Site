@@ -16,6 +16,5 @@ export const profile: Profile = {
   summary: [
     'Cloud Application Architect specializing in UI and API design, development, and integration. I build intuitive front-end interfaces and robust API-driven architectures that power scalable cloud solutions.',
     'My background spans software development, cloud platforms, and Agile practice, with a track record leading cross-functional teams. I work directly with clients to deliver seamless user experiences, modernize application interfaces, and design API strategies that improve interoperability and performance.',
-    "I'm looking for Cloud Architect or Developer roles where I can keep building user-centric, API-first, cloud-based applications.",
   ],
 };

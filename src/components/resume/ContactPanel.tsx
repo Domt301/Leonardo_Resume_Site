@@ -6,7 +6,7 @@ export default function ContactPanel() {
   return (
     <div className="text-sm leading-relaxed text-[#d7cfbd]">
       <p className="mb-4">
-        Looking for a Cloud Architect or senior engineer who leads teams and ships? Let&apos;s talk.
+        Want to talk cloud architecture, API strategy, or engineering leadership? Let&apos;s connect.
       </p>
       <ul className="space-y-2">
         <li>
