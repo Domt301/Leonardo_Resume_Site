@@ -1,6 +1,6 @@
 import type { Certification } from '../types/resume';
 
-// 14 certifications: 12 active, 2 lapsed.
+// 15 certifications: 13 active, 2 lapsed.
 
 export const certifications: Certification[] = [
   {
@@ -114,6 +114,15 @@ export const certifications: Certification[] = [
     status: 'active',
     description:
       'Hands-on certification in designing and deploying applications on Kubernetes. The credential behind the container and orchestration work.',
+  },
+  {
+    id: 'claude-certified-architect-foundations',
+    name: 'Claude Certified Architect (Foundations)',
+    issuer: 'Anthropic',
+    issuedDate: '2026-08-07',
+    status: 'active',
+    description:
+      'Foundational certification in architecting applications on Anthropic’s Claude platform — prompt design, tool use, and agent workflows. The credential behind the AI-first prototyping and Claude-powered features I build.',
   },
 ];
 
