@@ -8,12 +8,13 @@ import House from './world/props/House';
 import CaveArch from './world/props/CaveArch';
 import Shrine from './world/props/Shrine';
 import Chicken from './world/props/Chicken';
+import Bush from './world/props/Bush';
 import BridgeSpan from './world/props/BridgeSpan';
 import Water from './effects/Water';
 import Waterfall from './effects/Waterfall';
 import Lighting from './Lighting';
 import { INTERACTABLES } from './world/interactables';
-import { POSITIONS, TREES, ROCKS } from './world/layout';
+import { BUSHES, POSITIONS, TREES, ROCKS } from './world/layout';
 import { heightAt } from './systems/heightSystem';
 import { useSettingsStore } from '../state/useSettingsStore';
 
@@ -50,13 +51,10 @@ export default function World() {
       <Fence from={[pen.min[0], pen.max[1]]} to={[pen.max[0], pen.max[1]]} />
       <Fence from={[pen.max[0], pen.min[1]]} to={[pen.max[0], pen.min[1] + 1.2]} />
       <Fence from={[pen.max[0], pen.max[1] - 0.8]} to={[pen.max[0], pen.max[1]]} />
-      {quality !== 'low' && (
-        <>
-          <Chicken pen={pen} seed={1} />
-          <Chicken pen={pen} seed={2} />
-          <Chicken pen={pen} seed={3} />
-        </>
-      )}
+      {/* Chickens are gameplay (bumps → aggro), so they render on every quality preset. */}
+      {[0, 1, 2].map((i) => (
+        <Chicken key={`chicken-${i}`} index={i} pen={pen} />
+      ))}
 
       {/* About Overlook: bench + scroll pedestal by the pond */}
       <group position={[8.6, 0, 4.6]} rotation={[0, -0.6, 0]}>
@@ -71,6 +69,17 @@ export default function World() {
           </mesh>
         ))}
       </group>
+
+      {/* Searchable bushes (hearts hide inside some of them) */}
+      {BUSHES.map((b, i) => (
+        <Bush
+          key={`bush-${i}`}
+          index={i}
+          position={[b.pos[0], heightAt(b.pos[0], b.pos[1]), b.pos[1]]}
+          scale={b.scale}
+          swayOffset={i * 2.1}
+        />
+      ))}
 
       {/* Trees & rocks */}
       {TREES.map((t, i) => (

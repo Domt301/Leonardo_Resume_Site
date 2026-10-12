@@ -6,21 +6,10 @@ export default function ContactPanel() {
   return (
     <div className="text-sm leading-relaxed text-[#d7cfbd]">
       <p className="mb-4">
-        Want to talk cloud architecture, API strategy, or engineering leadership? Let&apos;s connect.
+        Want to talk cloud architecture, API strategy, or engineering leadership? Reach out on
+        LinkedIn — it&apos;s the fastest way to start a conversation.
       </p>
       <ul className="space-y-2">
-        <li>
-          <span className="text-[#8890b0]">Email — </span>
-          <a className="underline hover:text-[#f2c750]" href={`mailto:${profile.email}`}>
-            {profile.email}
-          </a>
-        </li>
-        <li>
-          <span className="text-[#8890b0]">Phone — </span>
-          <a className="underline hover:text-[#f2c750]" href={`tel:${profile.phone.replace(/\D/g, '')}`}>
-            {profile.phone}
-          </a>
-        </li>
         <li>
           <span className="text-[#8890b0]">LinkedIn — </span>
           <a

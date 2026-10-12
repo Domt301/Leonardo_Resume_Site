@@ -1,21 +1,39 @@
-import { useGameStore } from '../../state/useGameStore';
+import { useEffect, useRef, useState } from 'react';
+import { MAX_HEARTS, useGameStore } from '../../state/useGameStore';
 import { useUIStore } from '../../state/useUIStore';
 import { useSettingsStore } from '../../state/useSettingsStore';
 import { RESUME_SECTIONS, type ResumeSection } from '../../types/resume';
 import { ZONE_LABELS } from '../../app/routeMap';
 import { useIsTouch } from '../../hooks/useMediaQuery';
 import QualityMenu from './QualityMenu';
+import Minimap from './Minimap';
 
-const HEART_THEMES = ['Engineering', 'Leadership', 'Delivery'] as const;
+const HEART_POP_MS = 450;
 
 /** HTML HUD over the canvas (spec §10.1, reference image). */
 export default function Hud() {
   const visited = useUIStore((s) => s.visited);
   const toggleHelp = useUIStore((s) => s.toggleHelp);
   const currentZoneId = useGameStore((s) => s.currentZoneId);
+  const hearts = useGameStore((s) => s.hearts);
+  const hurtCount = useGameStore((s) => s.hurtCount);
+  const healCount = useGameStore((s) => s.healCount);
+  const chickensAngry = useGameStore((s) => s.chickensAngry);
   const audioEnabled = useSettingsStore((s) => s.audioEnabled);
   const toggleAudio = useSettingsStore((s) => s.toggleAudio);
+  const reducedMotion = useSettingsStore((s) => s.reducedMotion);
   const isTouch = useIsTouch();
+
+  // Pop the heart that was just refilled, briefly.
+  const [popIndex, setPopIndex] = useState<number | null>(null);
+  const lastHeal = useRef(healCount);
+  useEffect(() => {
+    if (healCount === lastHeal.current) return;
+    lastHeal.current = healCount;
+    setPopIndex(hearts - 1);
+    const t = setTimeout(() => setPopIndex(null), HEART_POP_MS);
+    return () => clearTimeout(t);
+  }, [healCount, hearts]);
 
   const progress = visited.length / RESUME_SECTIONS.length;
   const zoneLabel =
@@ -25,15 +43,16 @@ export default function Hud() {
 
   return (
     <div className="pointer-events-none absolute inset-0 z-20" aria-hidden={false}>
-      {/* Top-left: hearts + exploration progress */}
+      {/* Top-left: hearts + exploration progress + minimap */}
       <div className="absolute left-3 top-12 sm:top-14">
         <div
-          className="flex gap-1"
+          key={hurtCount}
+          className={`flex gap-1 ${hurtCount > 0 && !reducedMotion ? 'rq-shake' : ''}`}
           role="img"
-          aria-label={`Portfolio themes: ${HEART_THEMES.join(', ')}`}
+          aria-label={`Health: ${hearts} of ${MAX_HEARTS} hearts`}
         >
-          {HEART_THEMES.map((theme) => (
-            <PixelHeart key={theme} title={theme} />
+          {Array.from({ length: MAX_HEARTS }, (_, i) => (
+            <PixelHeart key={i} filled={i < hearts} pop={!reducedMotion && popIndex === i} />
           ))}
         </div>
         <div
@@ -54,6 +73,15 @@ export default function Hud() {
             {zoneLabel}
           </p>
         )}
+        {chickensAngry && (
+          <p
+            className="font-pixel mt-1 text-[10px] uppercase tracking-wider text-[#ee9297]"
+            role="status"
+          >
+            ⚠ Angry chickens
+          </p>
+        )}
+        <Minimap />
       </div>
 
       {/* Top-right: controls hint + toggles */}
@@ -100,29 +128,41 @@ export default function Hud() {
               </tr>
               <tr>
                 <td className="pr-3 pt-1">
+                  <kbd className="rq-key">N</kbd>
+                </td>
+                <td className="pt-1">Map</td>
+              </tr>
+              <tr>
+                <td className="pr-3 pt-1">
                   <kbd className="rq-key">?</kbd>
                 </td>
                 <td className="pt-1">Help</td>
               </tr>
             </tbody>
           </table>
+          <p className="font-pixel mt-1.5 border-t border-[#242838] pt-1.5 text-[9px] uppercase tracking-wider text-[#8a7d68]">
+            Bushes hide hearts · Don&apos;t bother the chickens
+          </p>
         </div>
       )}
     </div>
   );
 }
 
-function PixelHeart({ title }: { title: string }) {
+function PixelHeart({ filled, pop }: { filled: boolean; pop: boolean }) {
   return (
-    <svg viewBox="0 0 8 8" className="pixelated h-5 w-5" aria-hidden>
-      <title>{title}</title>
+    <svg
+      viewBox="0 0 8 8"
+      className={`pixelated h-5 w-5 ${pop ? 'rq-heart-pop' : ''}`}
+      aria-hidden
+    >
       <path
         d="M1 1h2v1h2V1h2v3H6v1H5v1H4v1H3V6H2V5H1V4H0V2h1z"
-        fill="#d25c65"
+        fill={filled ? '#d25c65' : '#2c2744'}
         stroke="#48111b"
         strokeWidth="0.35"
       />
-      <rect x="1.5" y="1.5" width="1" height="1" fill="#ee9297" />
+      {filled && <rect x="1.5" y="1.5" width="1" height="1" fill="#ee9297" />}
     </svg>
   );
 }

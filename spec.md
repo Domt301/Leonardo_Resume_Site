@@ -336,7 +336,6 @@ Contains:
 
 Contains:
 
-- Email
 - LinkedIn
 - GitHub
 - Location
@@ -1021,7 +1020,6 @@ export interface Profile {
   headline: string;
   summary: string;
   location: string;
-  email: string;
   linkedinUrl: string;
   githubUrl: string;
   resumeUrl: string;
@@ -1719,7 +1717,7 @@ For contact:
 
 - Preserve user-entered data.
 - Show a clear error.
-- Provide direct email link.
+- Provide a direct LinkedIn link.
 
 ---
 

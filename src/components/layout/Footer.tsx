@@ -11,7 +11,6 @@ export default function Footer() {
     { label: 'ATLANTA, GA', href: null },
     { label: 'LINKEDIN', href: profile.linkedinUrl },
     { label: 'GITHUB', href: profile.githubUrl },
-    { label: 'EMAIL', href: `mailto:${profile.email}` },
   ];
 
   return (
@@ -28,7 +27,7 @@ export default function Footer() {
               {l.href ? (
                 <a
                   href={l.href}
-                  target={l.href.startsWith('mailto:') ? undefined : '_blank'}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="font-pixel text-[#b6a78d] hover:text-[#f2c750]"
                 >

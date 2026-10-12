@@ -55,7 +55,14 @@ export default function HelpOverlay() {
           <Row k={<><kbd className="rq-key">E</kbd> / <kbd className="rq-key">Enter</kbd></>} v="Interact with the nearest sign" />
           <Row k={<kbd className="rq-key">Esc</kbd>} v="Close a panel" />
           <Row k={<kbd className="rq-key">M</kbd>} v="Toggle audio" />
+          <Row k={<kbd className="rq-key">N</kbd>} v="Toggle minimap" />
           <Row k={<><kbd className="rq-key">H</kbd> / <kbd className="rq-key">?</kbd></>} v="This help" />
+        </dl>
+
+        <h3 className="font-pixel mt-4 text-[10px] uppercase tracking-wider text-[#d49d2b]">Island life</h3>
+        <dl className="mt-2 space-y-2 text-sm text-[#d7cfbd]">
+          <Row k={<span className="text-[#ee9297]">♥</span>} v="Walk into a bush to search it — hearts hide inside and regrow" />
+          <Row k={<span className="text-[#dacfb6]">Chickens</span>} v="Bump them three times and they get angry. Fainting sends you back to the stairs" />
         </dl>
 
         <p className="mt-4 text-xs leading-relaxed text-[#b6a78d]">

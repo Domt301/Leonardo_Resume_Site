@@ -38,8 +38,17 @@ export default function GameCanvas() {
             import('./controls/inputMap'),
             import('./playerRuntime'),
             import('../state/useGameStore'),
-          ]).then(([im, pr, gs]) => {
-            w.__debug = { input: im.input, moveVector: im.moveVector, playerRuntime: pr.playerRuntime, useGameStore: gs.useGameStore };
+            import('./chickenRuntime'),
+            import('./pickupRuntime'),
+          ]).then(([im, pr, gs, cr, pk]) => {
+            w.__debug = {
+              input: im.input,
+              moveVector: im.moveVector,
+              playerRuntime: pr.playerRuntime,
+              useGameStore: gs.useGameStore,
+              flock: cr.flock,
+              bushStates: pk.bushStates,
+            };
           });
         }
       }}

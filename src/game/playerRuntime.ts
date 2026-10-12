@@ -7,4 +7,6 @@ export const playerRuntime = {
   z: 0.5,
   rotation: 0,
   speed: 0,
+  /** Clock time (seconds) until which chicken hits are ignored. */
+  invulnerableUntil: 0,
 };

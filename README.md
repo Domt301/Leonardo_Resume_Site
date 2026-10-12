@@ -11,7 +11,8 @@ About Overlook, Certifications Shrine, Contact Dock. Each opens its resume
 section through an in-world interaction. Built from `spec.md`.
 
 Everything is generated procedurally in code — **no 3D model files, no image
-assets** beyond the resume PDF and an optional pixel font.
+assets** beyond an optional pixel font. The resume PDF is produced on demand
+via the browser's print dialog, not stored in the repo.
 
 ## The resume always survives the game
 

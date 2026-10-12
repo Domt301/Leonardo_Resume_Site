@@ -11,3 +11,4 @@ npm-debug.log*
 !.env.example
 node_modules/.tmp
 .vercel
+*.pdf

@@ -8,8 +8,6 @@ export const profile: Profile = {
   heroLine:
     'I build scalable systems, lead high-performing teams, and turn complex problems into simple, elegant solutions.',
   location: 'Atlanta, GA',
-  email: 'leonardod.trimarchi@gmail.com',
-  phone: '770.310.5875',
   languages: 'English, Spanish (fluent — bilingual)',
   linkedinUrl: 'https://www.linkedin.com/in/leonardotrimarchi',
   githubUrl: 'https://github.com/Domt301',

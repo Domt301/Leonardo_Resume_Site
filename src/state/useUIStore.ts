@@ -1,6 +1,13 @@
 import { create } from 'zustand';
 import type { ResumeSection } from '../types/resume';
 
+export interface Notice {
+  id: number;
+  text: string;
+}
+
+let noticeSeq = 0;
+
 interface UIState {
   helpOpen: boolean;
   mobileNavOpen: boolean;
@@ -10,6 +17,10 @@ interface UIState {
   printPending: boolean;
   /** Sections the visitor has opened this session — drives the HUD progress bar. */
   visited: ResumeSection[];
+  /** Short gameplay toast ("Ouch!", "Found a heart!"). Null when nothing is showing. */
+  notice: Notice | null;
+  /** HUD minimap expanded (desktop default) or collapsed to a button. */
+  minimapOpen: boolean;
   setHelpOpen(v: boolean): void;
   toggleHelp(): void;
   setMobileNavOpen(v: boolean): void;
@@ -18,6 +29,11 @@ interface UIState {
   openResumeForPrint(): void;
   clearPrintPending(): void;
   markVisited(section: ResumeSection): void;
+  showNotice(text: string): void;
+  /** Clears the toast only if `id` is still the one showing. */
+  clearNotice(id: number): void;
+  setMinimapOpen(v: boolean): void;
+  toggleMinimap(): void;
 }
 
 export const useUIStore = create<UIState>()((set) => ({
@@ -26,6 +42,8 @@ export const useUIStore = create<UIState>()((set) => ({
   resumeOpen: false,
   printPending: false,
   visited: [],
+  notice: null,
+  minimapOpen: true,
   setHelpOpen: (helpOpen) => set({ helpOpen }),
   toggleHelp: () => set((s) => ({ helpOpen: !s.helpOpen })),
   setMobileNavOpen: (mobileNavOpen) => set({ mobileNavOpen }),
@@ -34,4 +52,8 @@ export const useUIStore = create<UIState>()((set) => ({
   clearPrintPending: () => set({ printPending: false }),
   markVisited: (section) =>
     set((s) => (s.visited.includes(section) ? s : { visited: [...s.visited, section] })),
+  showNotice: (text) => set({ notice: { id: ++noticeSeq, text } }),
+  clearNotice: (id) => set((s) => (s.notice?.id === id ? { notice: null } : s)),
+  setMinimapOpen: (minimapOpen) => set({ minimapOpen }),
+  toggleMinimap: () => set((s) => ({ minimapOpen: !s.minimapOpen })),
 }));

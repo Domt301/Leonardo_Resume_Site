@@ -90,6 +90,20 @@ export const ROCKS: { pos: Vec2; scale: number }[] = [
   { pos: [11.8, -4.2], scale: 0.9 },
 ];
 
+/**
+ * Searchable bushes. NOT blockers — the player walks into one to rustle it.
+ * `hasHeart` bushes start with a heart hidden inside; hearts regrow after
+ * pickup. Positions sit on the main lowland, clear of blockers, signs and pen.
+ */
+export const BUSHES: { pos: Vec2; scale: number; hasHeart: boolean }[] = [
+  { pos: [-9.6, -3.2], scale: 1.0, hasHeart: true }, // NW lowland, below Experience stairs
+  { pos: [-2.6, -1.6], scale: 0.9, hasHeart: true }, // beside the central dirt path
+  { pos: [10.4, -2.2], scale: 1.1, hasHeart: false }, // east, between rock and pond
+  { pos: [-10.2, 6.6], scale: 1.0, hasHeart: true }, // SW, south of the pen
+  { pos: [1.6, 4.2], scale: 0.85, hasHeart: false }, // south edge of the east-west path
+  { pos: [6.4, 6.4], scale: 1.0, hasHeart: true }, // between bench and shrine
+];
+
 // ── Zones (HUD location label) ───────────────────────────────────────────────
 
 export const ZONES: WorldZone[] = [

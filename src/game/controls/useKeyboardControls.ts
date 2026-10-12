@@ -13,7 +13,7 @@ function isTypingTarget(el: EventTarget | null): boolean {
 
 /**
  * Global keyboard controls (spec §9.1): WASD/arrows move, E/Enter interact,
- * M audio, H/? help. Escape is handled by the open dialog itself.
+ * M audio, N minimap, H/? help. Escape is handled by the open dialog itself.
  */
 export function useKeyboardControls(onInteract: () => void): void {
   useEffect(() => {
@@ -33,6 +33,10 @@ export function useKeyboardControls(onInteract: () => void): void {
       }
       if (e.code === 'KeyH' || (e.key === '?' && !e.ctrlKey && !e.metaKey)) {
         ui.toggleHelp();
+        return;
+      }
+      if (e.code === 'KeyN') {
+        ui.toggleMinimap();
         return;
       }
       if (e.code === 'KeyE' || e.code === 'Enter') {

@@ -12,7 +12,7 @@ const SECTION_DESCRIPTIONS: Record<string, string> = {
   projects: `Selected projects by ${profile.name}.`,
   certifications: `Certifications held by ${profile.name}, including AWS Professional-level credentials.`,
   about: `About ${profile.name} — professional narrative, education, and training.`,
-  contact: `Contact ${profile.name}: email, LinkedIn, GitHub.`,
+  contact: `Contact ${profile.name}: LinkedIn and GitHub.`,
 };
 
 /** Per-route document title + meta description (spec §19). */

@@ -5,6 +5,8 @@ import Footer from './Footer';
 import Hud from '../ui/Hud';
 import RoutePanels from '../ui/RoutePanels';
 import InteractionPrompt from '../ui/InteractionPrompt';
+import Toast from '../ui/Toast';
+import FaintOverlay from '../ui/FaintOverlay';
 import HelpOverlay from '../ui/HelpOverlay';
 import LoadingScreen from '../ui/LoadingScreen';
 import ResumeDocument from '../resume/ResumeDocument';
@@ -57,6 +59,8 @@ export default function SiteShell() {
 
       <Hud />
       <InteractionPrompt />
+      <Toast />
+      <FaintOverlay />
       <Footer />
       {isTouch && <TouchControls onInteract={interact} />}
 

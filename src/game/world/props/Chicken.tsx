@@ -3,56 +3,51 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { RAMP } from '../../art/palette';
 import { useSettingsStore } from '../../../state/useSettingsStore';
-import type { Vec2 } from '../../../types/game';
+import { useGameStore } from '../../../state/useGameStore';
+import { flock } from '../../chickenRuntime';
+import { playerRuntime } from '../../playerRuntime';
+import { HOP_S, isAngry, stepChicken } from '../../systems/chickenSystem';
+import type { Rect } from '../../../types/game';
 
 /**
- * Tiny wandering chicken, clamped to its pen. Deterministic drift — no
- * Math.random at runtime; seeded by `seed`. Static under reduced motion.
+ * Tiny chicken, clamped to its pen. Calm: deterministic wander (seeded, no
+ * Math.random, static under reduced motion). Angry: chases the player, glows
+ * red, and bites. All state lives in the shared `flock` runtime slot so the
+ * Player can resolve contacts; this component only moves and poses it.
  */
-export default function Chicken({
-  pen,
-  seed,
-}: {
-  pen: { min: Vec2; max: Vec2 };
-  seed: number;
-}) {
+export default function Chicken({ index, pen }: { index: number; pen: Rect }) {
   const group = useRef<THREE.Group>(null);
-  const heading = useRef(seed * 2.4);
-  const pos = useRef<Vec2>([
-    pen.min[0] + 0.7 + ((seed * 7.3) % (pen.max[0] - pen.min[0] - 1.4)),
-    pen.min[1] + 0.7 + ((seed * 3.7) % (pen.max[1] - pen.min[1] - 1.4)),
-  ]);
+  const bodyMat = useRef<THREE.MeshStandardMaterial>(null);
+  const headMat = useRef<THREE.MeshStandardMaterial>(null);
+  const comb = useRef<THREE.Mesh>(null);
 
-  useFrame(({ clock }, dt) => {
+  useFrame(({ clock }, rawDt) => {
     const g = group.current;
-    if (!g) return;
-    if (useSettingsStore.getState().reducedMotion) {
-      g.position.set(pos.current[0], 0, pos.current[1]);
-      return;
+    const c = flock.chickens[index];
+    if (!g || !c) return;
+    const now = clock.elapsedTime;
+    const dt = Math.min(rawDt, 1 / 20);
+    const reduced = useSettingsStore.getState().reducedMotion;
+    const { movementEnabled, fainted } = useGameStore.getState();
+    const angry = isAngry(flock, now);
+
+    // Freeze while a panel is open or the player is fainting.
+    let walking = false;
+    if (movementEnabled && !fainted) {
+      walking = stepChicken(c, flock, pen, playerRuntime, now, dt, reduced);
     }
-    const t = clock.elapsedTime;
-    // wander: slow heading drift with per-seed phase; pause cycles
-    const walking = Math.sin(t * 0.5 + seed * 3) > -0.2;
-    heading.current += Math.sin(t * 0.9 + seed * 5) * 0.9 * dt;
-    if (walking) {
-      const speed = 0.5;
-      let nx = pos.current[0] + Math.sin(heading.current) * speed * dt;
-      let nz = pos.current[1] + Math.cos(heading.current) * speed * dt;
-      // bounce off pen walls
-      if (nx < pen.min[0] + 0.4 || nx > pen.max[0] - 0.4) {
-        heading.current = -heading.current;
-        nx = pos.current[0];
-      }
-      if (nz < pen.min[1] + 0.4 || nz > pen.max[1] - 0.4) {
-        heading.current = Math.PI - heading.current;
-        nz = pos.current[1];
-      }
-      pos.current = [nx, nz];
-      g.rotation.y = heading.current;
-    }
-    const peck = walking ? 0 : Math.max(0, Math.sin(t * 6 + seed)) * 0.25;
-    g.position.set(pos.current[0], 0, pos.current[1]);
+
+    const hopT = c.hopUntil - now;
+    const hopY = !reduced && hopT > 0 ? Math.sin((hopT / HOP_S) * Math.PI) * 0.22 : 0;
+    g.position.set(c.x, hopY, c.z);
+    g.rotation.y = c.heading;
+    const peck = !reduced && !walking && !angry ? Math.max(0, Math.sin(now * 6 + c.seed)) * 0.25 : 0;
     g.rotation.x = peck;
+
+    const glow = angry ? (reduced ? 0.5 : 0.45 + 0.3 * Math.sin(now * 10)) : 0;
+    if (bodyMat.current) bodyMat.current.emissiveIntensity = glow;
+    if (headMat.current) headMat.current.emissiveIntensity = glow;
+    if (comb.current) comb.current.scale.setScalar(angry ? 1.5 : 1);
   });
 
   return (
@@ -60,15 +55,27 @@ export default function Chicken({
       {/* body */}
       <mesh position={[0, 0.22, 0]} castShadow>
         <boxGeometry args={[0.26, 0.24, 0.36]} />
-        <meshStandardMaterial color={RAMP.bone[4]} flatShading />
+        <meshStandardMaterial
+          ref={bodyMat}
+          color={RAMP.bone[4]}
+          emissive={RAMP.crimson[2]}
+          emissiveIntensity={0}
+          flatShading
+        />
       </mesh>
       {/* head */}
       <mesh position={[0, 0.42, 0.16]}>
         <boxGeometry args={[0.16, 0.18, 0.16]} />
-        <meshStandardMaterial color={RAMP.bone[4]} flatShading />
+        <meshStandardMaterial
+          ref={headMat}
+          color={RAMP.bone[4]}
+          emissive={RAMP.crimson[2]}
+          emissiveIntensity={0}
+          flatShading
+        />
       </mesh>
       {/* comb */}
-      <mesh position={[0, 0.54, 0.16]}>
+      <mesh ref={comb} position={[0, 0.54, 0.16]}>
         <boxGeometry args={[0.06, 0.08, 0.1]} />
         <meshStandardMaterial color={RAMP.crimson[3]} flatShading />
       </mesh>

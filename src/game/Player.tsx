@@ -5,10 +5,16 @@ import { moveVector } from './controls/inputMap';
 import { resolveCollisions } from './systems/collisionSystem';
 import { heightAt } from './systems/heightSystem';
 import { selectInteractable, zoneAt } from './systems/interactionSystem';
+import { calmFlock, isAngry, PLAYER_IFRAMES_S, processContacts } from './systems/chickenSystem';
+import { updateBushes } from './systems/pickupSystem';
 import { INTERACTABLES } from './world/interactables';
-import { BLOCKERS, PLAYER_RADIUS, WALKABLE, ZONES } from './world/layout';
+import { BLOCKERS, BUSHES, PLAYER_RADIUS, POSITIONS, SPAWN, WALKABLE, ZONES } from './world/layout';
 import { playerRuntime } from './playerRuntime';
-import { useGameStore } from '../state/useGameStore';
+import { flock } from './chickenRuntime';
+import { bushStates } from './pickupRuntime';
+import { MAX_HEARTS, useGameStore } from '../state/useGameStore';
+import { useUIStore } from '../state/useUIStore';
+import { useSettingsStore } from '../state/useSettingsStore';
 import { RAMP } from './art/palette';
 import type { Vec2 } from '../types/game';
 
@@ -17,6 +23,8 @@ const WALK_SPEED = 3.2;
 const ACCELERATION = 18;
 const DECELERATION = 22;
 const ROTATION_SPEED = 12;
+/** Grace period after respawning at the stairway. */
+const RESPAWN_GRACE_S = 1.5;
 
 const COLLISION_WORLD = { walkable: WALKABLE, blockers: BLOCKERS };
 
@@ -31,6 +39,10 @@ function dampAngle(current: number, target: number, lambda: number, dt: number):
  * Kinematic player (spec §15): procedural primitive likeness of Leonardo —
  * black polo, glasses, goatee, short brown hair. Per-frame state lives in
  * refs/playerRuntime. Local +Z is the face; spawn rotation 0 faces the camera.
+ *
+ * The Player is also the single orchestrator of gameplay side effects: chicken
+ * contacts, heart pickups, respawn. It reads the stores via getState() only —
+ * never through hook subscriptions — so it never re-renders mid-walk.
  */
 export default function Player() {
   const group = useRef<THREE.Group>(null);
@@ -43,18 +55,48 @@ export default function Player() {
   const velocity = useRef<Vec2>([0, 0]);
   const walkPhase = useRef(0);
   const interactionClock = useRef(0);
+  const seenRespawnToken = useRef(useGameStore.getState().respawnToken);
 
-  const spawn = useMemo(() => useGameStore.getState().spawnPoint, []);
+  // Spawn once. The runtime is written here (not during render) so a future
+  // re-render of this component can never teleport the player back to spawn.
+  const spawn = useMemo(() => {
+    const p = useGameStore.getState().spawnPoint;
+    playerRuntime.x = p[0];
+    playerRuntime.z = p[2];
+    playerRuntime.y = heightAt(p[0], p[2]);
+    return p;
+  }, []);
 
-  useFrame((_, rawDt) => {
+  useFrame((state, rawDt) => {
     const dt = Math.min(rawDt, 1 / 20);
+    const now = state.clock.elapsedTime;
     const g = group.current;
     if (!g) return;
 
-    const { movementEnabled, setActiveInteractable, setCurrentZone } = useGameStore.getState();
+    const store = useGameStore.getState();
+    const { movementEnabled, fainted, setActiveInteractable, setCurrentZone } = store;
+    const reducedMotion = useSettingsStore.getState().reducedMotion;
+
+    // ── respawn (hearts hit zero) ───────────────────────────────────────────
+    if (store.respawnToken !== seenRespawnToken.current) {
+      seenRespawnToken.current = store.respawnToken;
+      playerRuntime.x = SPAWN[0];
+      playerRuntime.z = SPAWN[2];
+      playerRuntime.y = heightAt(SPAWN[0], SPAWN[2]);
+      playerRuntime.rotation = 0;
+      playerRuntime.speed = 0;
+      playerRuntime.invulnerableUntil = now + RESPAWN_GRACE_S;
+      velocity.current[0] = 0;
+      velocity.current[1] = 0;
+      calmFlock(flock);
+      store.setChickensAngry(false);
+      g.position.set(playerRuntime.x, playerRuntime.y, playerRuntime.z);
+    }
+
+    const canMove = movementEnabled && !fainted;
 
     // ── movement ────────────────────────────────────────────────────────────
-    const [ix, iz] = movementEnabled ? moveVector() : [0, 0];
+    const [ix, iz] = canMove ? moveVector() : [0, 0];
     const moving = ix !== 0 || iz !== 0;
     const targetVx = ix * WALK_SPEED;
     const targetVz = iz * WALK_SPEED;
@@ -93,6 +135,10 @@ export default function Player() {
     }
     g.rotation.y = playerRuntime.rotation;
 
+    // ── i-frames: blink while invulnerable (steady under reduced motion) ────
+    const invulnerable = now < playerRuntime.invulnerableUntil;
+    g.visible = !invulnerable || reducedMotion || Math.floor(now * 12) % 2 === 0;
+
     // ── walk cycle ──────────────────────────────────────────────────────────
     const speedFactor = Math.min(1, speed / WALK_SPEED);
     walkPhase.current += dt * (4 + 6 * speedFactor);
@@ -105,23 +151,59 @@ export default function Player() {
       bodyGroup.current.position.y = Math.abs(Math.sin(walkPhase.current * 2)) * 0.06 * speedFactor;
     }
 
-    // ── interaction + zone selection (~10 Hz) ───────────────────────────────
+    // ── chickens: bumps while calm, bites while angry (every frame) ─────────
+    if (canMove) {
+      const contact = processContacts(
+        flock,
+        playerRuntime.x,
+        playerRuntime.z,
+        PLAYER_RADIUS,
+        now,
+        playerRuntime.invulnerableUntil,
+        POSITIONS.fencePen,
+      );
+      if (contact.enraged) {
+        store.setChickensAngry(true);
+        useUIStore.getState().showNotice('The chickens are angry!');
+      }
+      if (contact.damaged) {
+        playerRuntime.invulnerableUntil = now + PLAYER_IFRAMES_S;
+        store.damage(1);
+        if (useGameStore.getState().hearts > 0) useUIStore.getState().showNotice('Ouch!');
+      }
+    }
+
+    // ── interaction, zone, aggro mirror, heart pickups (~10 Hz) ─────────────
     interactionClock.current += dt;
     if (interactionClock.current > 0.1) {
       interactionClock.current = 0;
-      const nearest = movementEnabled
+      const nearest = canMove
         ? selectInteractable(playerRuntime.x, playerRuntime.z, INTERACTABLES)
         : null;
       setActiveInteractable(nearest?.id ?? null);
       const zone = zoneAt(playerRuntime.x, playerRuntime.z, ZONES);
       setCurrentZone(zone?.id ?? null);
+      // Mirror unconditionally: aggro can expire while a panel is open.
+      store.setChickensAngry(isAngry(flock, now));
+      if (canMove) {
+        const events = updateBushes(
+          bushStates,
+          BUSHES,
+          playerRuntime.x,
+          playerRuntime.z,
+          now,
+          useGameStore.getState().hearts,
+          MAX_HEARTS,
+          PLAYER_RADIUS,
+        );
+        for (const e of events) {
+          if (e.type === 'heal' && store.heal(1)) {
+            useUIStore.getState().showNotice('Found a heart!');
+          }
+        }
+      }
     }
   });
-
-  // set spawn once
-  playerRuntime.x = spawn[0];
-  playerRuntime.z = spawn[2];
-  playerRuntime.y = heightAt(spawn[0], spawn[2]);
 
   return (
     <group ref={group} position={[spawn[0], playerRuntime.y, spawn[2]]}>

@@ -13,8 +13,6 @@ export interface Profile {
   /** One-line HUD summary shown in the bottom info bar. */
   heroLine: string;
   location: string;
-  email: string;
-  phone: string;
   languages: string;
   linkedinUrl: string;
   githubUrl: string;

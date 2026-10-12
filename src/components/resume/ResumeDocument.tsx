@@ -98,16 +98,6 @@ export default function ResumeDocument({ standalone = false, onClose, fallbackNo
           <p className="mt-1 text-lg text-[#d49d2b]">{profile.headline}</p>
           <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-[#b6a78d]">
             <li>{profile.location}</li>
-            <li>
-              <a className="underline hover:text-[#f2c750]" href={`mailto:${profile.email}`}>
-                {profile.email}
-              </a>
-            </li>
-            <li>
-              <a className="underline hover:text-[#f2c750]" href={`tel:${profile.phone.replace(/\D/g, '')}`}>
-                {profile.phone}
-              </a>
-            </li>
             {externalLinks.map((l) => (
               <li key={l.label}>
                 <a
@@ -201,7 +191,7 @@ export default function ResumeDocument({ standalone = false, onClose, fallbackNo
         </Section>
 
         <footer className="mt-10 border-t border-[#242838] pt-4 text-center text-xs text-[#626a8b]">
-          {profile.name} · {profile.location} · {profile.email}
+          {profile.name} · {profile.location} · {profile.linkedinUrl.replace(/^https?:\/\/(www\.)?/, '')}
         </footer>
       </main>
     </div>
